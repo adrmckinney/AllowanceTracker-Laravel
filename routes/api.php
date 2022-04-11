@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\ForgotPasswordController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\LogoutController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\ResetPasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,10 +23,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Route::post('/register', 'RegisterController@register')->name('register.perform');
-// Route::post('/register', RegisterController::class, 'register');
-// Route::post('/register', [RegisterController::class, 'register']);
 Route::get('/logout', [LogoutController::class, 'logout']);
+
+Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm']);
+Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+
+Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm']);
+Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.reset.submit');
+
+
 Route::group(['namespace' => 'App\Http\Controllers'], function () {
     /**
      * Home Routes
