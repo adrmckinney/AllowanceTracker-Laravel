@@ -37,12 +37,12 @@ class UserControllerTest extends APITestCase
     }
 
     /** @test */
-    public function user_can_update_account_balance()
+    public function user_can_update_wallet()
     {
         $this->initTestUser();
-        $oldAccountBalance = $this->authUser->account_balance;
+        $oldAccountBalance = $this->authUser->wallet;
         $newAccountBalance = 100;
-        $this->canUpdateUser('account_balance', $oldAccountBalance, $newAccountBalance);
+        $this->canUpdateUser('wallet', $oldAccountBalance, $newAccountBalance);
     }
 
     private function canUpdateUser($target, $old, $new)
