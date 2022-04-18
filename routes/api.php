@@ -7,6 +7,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\LogoutController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +31,9 @@ Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEm
 
 Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm']);
 Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.reset.submit');
+
+Route::put('user/update', [UserController::class, 'update'])->middleware('auth');
+
 
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {

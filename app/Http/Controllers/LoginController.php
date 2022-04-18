@@ -11,46 +11,47 @@ use Illuminate\Support\Facades\Hash;
 class LoginController extends Controller
 {
 
-    /**
-     * Handle account login request
-     * 
-     * @param Request $request
-     * 
-     */
-    public function login(Request $request)
-    {
-
-        $user = User::where('username', $request->username)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return ['error' => 'Username or Password is incorrect'];
-        };
-
-        return $user;
-    }
-
     // /**
     //  * Handle account login request
     //  * 
-    //  * @param LoginRequest $request
+    //  * @param Request $request
     //  * 
-    //  * @return \Illuminate\Http\Response
     //  */
-    // public function login(LoginRequest $request)
+    // public function login(Request $request)
     // {
-    //     $credentials = $request->getCredentials();
 
-    //     if (!Auth::validate($credentials)) :
-    //         return redirect()->to('login')
-    //             ->withErrors(trans('auth.failed'));
-    //     endif;
+    //     $user = User::where('username', $request->username)->first();
 
-    //     $user = Auth::getProvider()->retrieveByCredentials($credentials);
+    //     if (!$user || !Hash::check($request->password, $user->password)) {
+    //         return ['error' => 'Username or Password is incorrect'];
+    //     };
 
-    //     Auth::login($user);
-
-    //     return $this->authenticated($request, $user);
+    //     return $user;
     // }
+
+    /**
+     * Handle account login request
+     * 
+     * @param LoginRequest $request
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function login(LoginRequest $request)
+    {
+        $credentials = $request->getCredentials();
+
+        if (!Auth::validate($credentials)) {
+            // return redirect()->to('login')
+            //     ->withErrors(trans('auth.failed'));
+            return ['error' => 'Username or Password is incorrect'];
+        }
+
+        $user = Auth::getProvider()->retrieveByCredentials($credentials);
+
+        Auth::login($user);
+
+        return [$this->authenticated($request, $user)->getStatusCode(), $user];
+    }
 
     /**
      * Handle response after user authenticated
