@@ -11,6 +11,7 @@ class UserController extends Controller
     {
         $fields = ['name', 'email', 'username', 'wallet', 'password'];
 
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         foreach ($fields as $field) {

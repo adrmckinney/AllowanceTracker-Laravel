@@ -2,10 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use Tests\APITestCase;
 
-use function PHPUnit\Framework\assertNotEquals;
 
 class UserControllerTest extends APITestCase
 {

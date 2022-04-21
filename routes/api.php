@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ChoreController;
 use App\Http\Controllers\ForgotPasswordController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,8 +33,10 @@ Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEm
 Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm']);
 Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.reset.submit');
 
-Route::put('user/update', [UserController::class, 'update'])->middleware('auth');
+Route::put('/user/update', [UserController::class, 'update'])->middleware('auth');
 
+Route::post('/chore', [ChoreController::class, 'createChore'])->middleware('auth');
+Route::put('/chore', [ChoreController::class, 'updateChore'])->middleware('auth');
 
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {
