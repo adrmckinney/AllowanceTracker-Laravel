@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -44,8 +45,13 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function chores(): HasMany
+    // public function chores(): HasMany
+    // {
+    //     return $this->hasMany(Chore::class, 'user_id');
+    // }
+
+    public function permissions(): HasMany
     {
-        return $this->hasMany(Chore::class, 'user_id');
+        return $this->hasMany(UsersPermissions::class, 'user_id');
     }
 }
