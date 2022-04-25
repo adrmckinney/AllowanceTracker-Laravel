@@ -43,6 +43,16 @@ class UserControllerTest extends APITestCase
         $this->canUpdateUser('wallet', $oldAccountBalance, $newAccountBalance);
     }
 
+    // create a user, assign user permission level
+    /** @test */
+    public function can_assign_user_permission_level()
+    {
+        $this->initTestUser();
+        $oldAccountBalance = $this->authUser->wallet;
+        $newAccountBalance = 100;
+        $this->canUpdateUser('wallet', $oldAccountBalance, $newAccountBalance);
+    }
+
     private function canUpdateUser($target, $old, $new)
     {
         $response = $this->put('/api/user/update', [$target => $new]);

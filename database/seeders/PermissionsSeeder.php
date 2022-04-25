@@ -38,18 +38,6 @@ class PermissionsSeeder extends Seeder
                 'display_name' => $permission['display_name'],
             ]);
 
-            // $this->choreController->createChore(
-            //     $chore['name'],
-            //     $chore['description'],
-            //     $chore['cost'],
-            //     $chore['user_id'],
-            //     $chore['approval_requested'],
-            //     $chore['approval_request_date'],
-            //     $chore['approval_status'],
-            //     $chore['approval_date'],
-            // );
-
-
             $this->command->getOutput()->progressAdvance();
         }
         $this->command->info(PHP_EOL);

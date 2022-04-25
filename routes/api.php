@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\LogoutController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\UserController;
 
@@ -37,6 +38,13 @@ Route::put('/user/update', [UserController::class, 'update'])->middleware('auth'
 
 Route::post('/chore', [ChoreController::class, 'createChore'])->middleware('auth');
 Route::put('/chore', [ChoreController::class, 'updateChore'])->middleware('auth');
+
+Route::get('/permission/{id}', [PermissionsController::class, 'getPermission'])->middleware('auth');
+Route::get('/permissions', [PermissionsController::class, 'getPermissions'])->middleware('auth');
+Route::post('/permission/create', [PermissionsController::class, 'createPermission'])->middleware('auth');
+Route::put('/permission/update', [PermissionsController::class, 'updatePermission'])->middleware('auth');
+Route::post('/permission/add', [PermissionsController::class, 'addPermission'])->middleware('auth');
+Route::put('/permission/remove', [PermissionsController::class, 'removePermission'])->middleware('auth');
 
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {

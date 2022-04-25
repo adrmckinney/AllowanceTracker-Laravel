@@ -9,7 +9,7 @@ class UserController extends Controller
 {
     public function update(Request $request)
     {
-        $fields = ['name', 'email', 'username', 'wallet', 'password'];
+        $fields = ['name', 'email', 'username', 'wallet', 'password', 'permissions'];
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
