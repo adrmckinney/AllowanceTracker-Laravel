@@ -5,21 +5,30 @@ namespace App\Data\Enums;
 class PermissionTypes
 {
     public static $NONE = 0;
-    public static $PARENT = 1;
-    public static $CHILD = 2;
+    public static $Admin = 1;
+    public static $PARENT = 2;
+    public static $CHILD = 3;
 
     public static $STATUSES = [
         'none' => [
             'value' => 0,
-            'name' => 'No Status'
+            'display_name' => 'No Status',
+            'name' => 'no_status'
         ],
-        'check_one' => [
+        'admin' => [
             'value' => 1,
-            'name' => 'Parent'
+            'display_name' => 'Admin',
+            'name' => 'admin'
         ],
-        'check_two' => [
+        'parent' => [
             'value' => 2,
-            'name' => 'Child'
+            'display_name' => 'Parent',
+            'name' => 'parent'
+        ],
+        'child' => [
+            'value' => 3,
+            'display_name' => 'Child',
+            'name' => 'child'
         ],
     ];
 }

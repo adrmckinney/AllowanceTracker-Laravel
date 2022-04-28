@@ -10,6 +10,10 @@ class PermissionsSeeder extends Seeder
 {
     private $permissions = [
         [
+            'name' => 'admin',
+            'display_name' => 'Admin',
+        ],
+        [
             'name' => 'parent',
             'display_name' => 'Parent',
         ],
@@ -31,7 +35,6 @@ class PermissionsSeeder extends Seeder
         $this->command->getOutput()->progressStart(count($this->permissions));
 
         foreach ($this->permissions as $permission) {
-            // $updateChore = $this->choreController->getChoreById($chore['has to be something else'])
 
             DB::table('permissions')->insert([
                 'name' => $permission['name'],

@@ -32,8 +32,16 @@ class PermissionsController extends Controller
         return $permission;
     }
 
-    public function addPermission(Request $request)
+    public static function addPermission(Request $request)
     {
+        $permissionId = $request->user()->permissions->toArray()[0]['permission_id'];
+        dump('permId', $permissionId);
+        // if ($request->user()->cannot('add', Permission::class)) {
+        //     abort(403);
+        // }
+
+        // $this->authorize('add', Permission::class);
+
         $user_id = $request->user_id;
         $permissionName = $request->name;
 
@@ -50,7 +58,7 @@ class PermissionsController extends Controller
                 ]);
             } else {
                 throw new Exception(
-                    "Permission: User already has this permission - $permissionName"
+                    "Permission: User already has this permission - {$permissionName}"
                 );
             }
         } else {

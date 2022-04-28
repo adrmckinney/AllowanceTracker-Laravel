@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Types\Users\UserType;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -48,6 +49,11 @@ class User extends Authenticatable
     // public function chores(): HasMany
     // {
     //     return $this->hasMany(Chore::class, 'user_id');
+    // }
+
+    // public function __construct(UserType $newUser)
+    // {
+
     // }
 
     public function permissions(): HasMany

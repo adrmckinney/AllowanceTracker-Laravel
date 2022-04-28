@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Data\Enums\ChoreApprovalStatuses;
 use App\Models\Chore;
+use App\Models\Permission;
+use App\Models\UsersPermissions;
 use Tests\APITestCase;
 
 
@@ -16,17 +18,17 @@ class ChoresControllerTest extends APITestCase
     //     $this->canCreateChore();
     // }
 
-    // /** @test */
-    // public function user_update_chore_general()
-    // {
-    //     $input = [
-    //         'name' => 'A New Name',
-    //         'description' => 'A new Description',
-    //         'cost' => 100
-    //     ];
-    //     $this->initTestUser();
-    //     $this->canUpdateChore($input);
-    // }
+    /** @test */
+    public function user_update_chore_general()
+    {
+        $input = [
+            'name' => 'A New Name',
+            'description' => 'A new Description',
+            'cost' => 100
+        ];
+        $this->initTestUser();
+        $this->canUpdateChore($input);
+    }
 
     /** @test */
     public function user_update_chore_approval_request()
@@ -62,6 +64,15 @@ class ChoresControllerTest extends APITestCase
 
     private function canUpdateChore($input)
     {
+        $permission = Permission::factory()->create();
+        // $permission = $this->permissions[1];
+        $userId = $this->authUser->id;
+
+        UsersPermissions::factory()->create([
+            'user_id' => $userId,
+            'permission_id' => $permission->id
+        ]);
+
         $chore = Chore::factory()->create();
         $response = $this->put('/api/chore', ['id' => $chore->id, ...$input]);
 
@@ -74,7 +85,7 @@ class ChoresControllerTest extends APITestCase
     {
         $chore = Chore::factory()->create();
         $response = $this->put('/api/chore', ['id' => $chore->id, ...$input]);
-        $this->echoResponse($response);
+
         $this->assertEquals($input['name'], $response['name']);
         $this->assertEquals($input['approval_requested'], $response['approval_requested']);
         $this->assertNotNull($response['approval_request_date']);

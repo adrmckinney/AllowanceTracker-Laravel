@@ -39,6 +39,14 @@ class ChoreController extends Controller
 
         $chore = $this->getChoreById($request->id);
 
+        // $permissionId = $request->user()->permissions->toArray()[0]['permission_id'];
+        // dump('permId', $permissionId);
+        if ($request->user()->cannot('update', $chore)) {
+            abort(403);
+        }
+
+        // $this->authorize('add', Permission::class);
+
         foreach ($fields as $field) {
             if ($request->$field) {
                 $this->isRequestingApproval($chore, $request, $field);

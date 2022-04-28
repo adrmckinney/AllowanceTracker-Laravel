@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\PermissionsController;
 use App\Models\Permission;
+use App\Models\UsersPermissions;
+use Exception;
+use Illuminate\Http\Request;
 use Tests\APITestCase;
 
 
@@ -17,26 +21,26 @@ class PermissionsControllerTest extends APITestCase
         $this->permissions = Permission::factory()->count(2)->create();
     }
 
-    // /** @test */
-    // public function can_get_permission()
-    // {
-    //     $this->initTestUser();
-    //     $this->getPermission();
-    // }
+    /** @test */
+    public function can_get_permission()
+    {
+        $this->initTestUser();
+        $this->getPermission();
+    }
 
-    // /** @test */
-    // public function can_get_permissions()
-    // {
-    //     $this->initTestUser();
-    //     $this->getPermissions();
-    // }
+    /** @test */
+    public function can_get_permissions()
+    {
+        $this->initTestUser();
+        $this->getPermissions();
+    }
 
-    // /** @test */
-    // public function can_create_permission()
-    // {
-    //     $this->initTestUser();
-    //     $this->createPermission();
-    // }
+    /** @test */
+    public function can_create_permission()
+    {
+        $this->initTestUser();
+        $this->createPermission();
+    }
 
     /** @test */
     public function can_assign_user_permission_level()
@@ -44,6 +48,13 @@ class PermissionsControllerTest extends APITestCase
         $this->initTestUser();
         $this->addPermission();
     }
+
+    // /** @test */
+    // public function cannot_assign_user_permission_level_they_already_have()
+    // {
+    //     $this->initTestUser();
+    //     $this->cannotAddPermissionAlreadyAssigned();
+    // }
 
     private function getPermission()
     {
@@ -81,31 +92,59 @@ class PermissionsControllerTest extends APITestCase
 
         $response = $this->post('/api/permission/create', $input);
 
-        $this->echoResponse($response);
         $response->assertStatus(201);
         $response->assertJsonPath('name', $input['name']);
     }
 
     private function addPermission()
     {
-        $permissionName = $this->permissions->first()->name;
+        $permission = $this->permissions[1];
         $userId = $this->authUser->id;
 
-        $response = $this->post('/api/permission/add', [
+        UsersPermissions::factory()->create([
             'user_id' => $userId,
-            'name' => $permissionName
+            'permission_id' => $permission->id
         ]);
 
-        $this->echoResponse($response);
+        // dump('authUser perm', $this->authUser->permissions);
+
+        $this->post('/api/permission/add', [
+            'user_id' => $userId,
+            'name' => $permission->name
+        ]);
+
+        $this->assertDatabaseHas('users_permissions', [
+            'user_id' => $userId,
+            'permission_id' => $permission->id
+        ]);
         // $response = $this->post('/api/permission/add', [
         //     'user_id' => $this->authUser->id,
         //     'permission_id' => $this->authUser->id
         // ]);
 
 
-        // $response->assertStatus(200);
-        // $response->assertJsonPath($target, $new);
-        // $this->assertNotEquals($old, $new);
+        // 'name' => PermissionTypes::$STATUSES['parent']['name'],
+        // 'display_name' => PermissionTypes::$STATUSES['parent']['display_name'],
+    }
+
+    private function cannotAddPermissionAlreadyAssigned()
+    {
+        $permission = $this->permissions->first();
+        $userId = $this->authUser->id;
+
+        $input = new Request([
+            'user_id' => $userId,
+            'name' => $permission->name
+        ]);
+
+        PermissionsController::addPermission($input);
+
+        $response = $this->post('/api/permission/add', [
+            'user_id' => $userId,
+            'name' => $permission->name
+        ]);
+
+        $this->expectExceptionMessage("Permission: User already has this permission - {$permission->name}");
     }
 
 

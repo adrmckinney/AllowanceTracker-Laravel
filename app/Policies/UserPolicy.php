@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Data\Entities\User;
+namespace App\Policies;
 
-use App\Data\Abstractions\AbstractPolicy;
 use App\Models\User;
 
 class UserPolicy extends AbstractPolicy

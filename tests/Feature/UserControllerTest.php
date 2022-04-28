@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Tests\APITestCase;
 
 
@@ -43,14 +44,18 @@ class UserControllerTest extends APITestCase
         $this->canUpdateUser('wallet', $oldAccountBalance, $newAccountBalance);
     }
 
-    // create a user, assign user permission level
     /** @test */
-    public function can_assign_user_permission_level()
+    public function can_get_user_by_id()
     {
         $this->initTestUser();
-        $oldAccountBalance = $this->authUser->wallet;
-        $newAccountBalance = 100;
-        $this->canUpdateUser('wallet', $oldAccountBalance, $newAccountBalance);
+        $this->canGetUser();
+    }
+
+    /** @test */
+    public function can_get_all_users()
+    {
+        $this->initTestUser();
+        $this->canGetAllUsers();
     }
 
     private function canUpdateUser($target, $old, $new)
@@ -70,5 +75,33 @@ class UserControllerTest extends APITestCase
 
         $response->assertStatus(200);
         $this->assertEquals("Only a parent has access to change this", $error);
+    }
+
+    private function canGetUser()
+    {
+        $user = $this->authUser;
+        $response = $this->get("/api/user/{$user->id}");
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('name', $user->name);
+        $response->assertJsonPath('api_token', $user->api_token);
+    }
+
+    private function canGetAllUsers()
+    {
+        User::factory()->count(3)->create();
+        $users = User::all();
+
+        $userNames = collect($users)->map(function ($user) {
+            return $user->name;
+        });
+
+        $response = $this->get("/api/users");
+        $responseUserNames = $response->baseResponse->original->map(function ($user) {
+            return $user->name;
+        });
+
+        $response->assertStatus(200);
+        $this->assertEquals($userNames, $responseUserNames);
     }
 }

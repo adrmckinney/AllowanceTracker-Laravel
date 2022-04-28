@@ -2,8 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Data\Enums\ChoreApprovalStatuses;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
