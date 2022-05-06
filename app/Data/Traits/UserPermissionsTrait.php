@@ -10,6 +10,7 @@ trait UserPermissionsTrait
 {
     public function addPermission($permissionName)
     {
+
         $permission = Permission::where('name', '=', $permissionName)->first();
         if ($permission) {
             $userPermission = UsersPermissions::where('user_id', '=', $this->id)
@@ -71,10 +72,16 @@ trait UserPermissionsTrait
 
     public function resetPermissions()
     {
+        dump('reset perms ran');
         $permissions = UsersPermissions::where('user_id', '=', $this->id)->get();
         foreach ($permissions as $permission) {
             $permission->delete();
         }
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasPermission(['admin']);
     }
 
     public function isParent(): bool
@@ -93,12 +100,12 @@ trait UserPermissionsTrait
 
         return $this->permissions->count() === 0
             && $userPermissions->count() === 0;
+        return false;
     }
 
 
-
-    public function isOrganizationPurchaser(): bool
-    {
-        return $this->hasPermission('organization-purchaser');
-    }
+    // public function isOrganizationPurchaser(): bool
+    // {
+    //     return $this->hasPermission('organization-purchaser');
+    // }
 }

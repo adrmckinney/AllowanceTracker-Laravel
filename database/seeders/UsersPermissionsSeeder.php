@@ -39,7 +39,7 @@ class UsersPermissionsSeeder extends Seeder
             if (UserController::getUserByName($user->name)->first()->name === "Daniel McKinney") {
                 $userPermission = new Request([
                     'user_id' => $user->id,
-                    'name' => 'parent'
+                    'name' => 'admin'
                 ]);
 
                 PermissionsController::addPermission($userPermission);

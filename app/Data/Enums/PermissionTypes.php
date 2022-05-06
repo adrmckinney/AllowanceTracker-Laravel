@@ -5,7 +5,7 @@ namespace App\Data\Enums;
 class PermissionTypes
 {
     public static $NONE = 0;
-    public static $Admin = 1;
+    public static $ADMIN = 1;
     public static $PARENT = 2;
     public static $CHILD = 3;
 

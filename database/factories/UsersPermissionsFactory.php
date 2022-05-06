@@ -19,8 +19,8 @@ class UsersPermissionsFactory extends Factory
     public function definition()
     {
         return [
-            'user_id' => User::factory()->create()->id,
-            'permission_id' => Permission::factory()->create()->id,
+            'user_id' => User::factory(),
+            'permission_id' => Permission::factory(),
         ];
     }
 }

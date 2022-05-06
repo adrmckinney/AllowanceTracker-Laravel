@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Data\Enums\ChoreApprovalStatuses;
 use App\Models\Chore;
+use Exception;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
 
 class ChoreController extends Controller
 {
@@ -20,6 +23,10 @@ class ChoreController extends Controller
             'approval_status' => $request['approval_status'],
             'approval_date' => $request['approval_date'],
         ]);
+
+        if ($request->user()->cannot('create', $chore)) {
+            abort(403, 'You do not have access to create a chore');
+        }
 
         return $chore;
     }
@@ -39,17 +46,19 @@ class ChoreController extends Controller
 
         $chore = $this->getChoreById($request->id);
 
-        // $permissionId = $request->user()->permissions->toArray()[0]['permission_id'];
-        // dump('permId', $permissionId);
-        if ($request->user()->cannot('update', $chore)) {
-            abort(403);
+        if (!$this->isRequestingApproval($request, 'approval_requested')) {
+            if ($request->user()->cannot('update', $chore)) {
+                abort(403, 'You do not have access to update this chore');
+            }
         }
 
-        // $this->authorize('add', Permission::class);
 
         foreach ($fields as $field) {
             if ($request->$field) {
-                $this->isRequestingApproval($chore, $request, $field);
+                if ($this->isRequestingApproval($request, $field)) {
+                    $this->handleApprovalRequest($chore);
+                }
+
                 $chore->$field = $request->$field;
 
                 $chore->save();
@@ -58,16 +67,26 @@ class ChoreController extends Controller
         return $chore;
     }
 
-    public function isRequestingApproval($chore, $request, $field)
+    public function isRequestingApproval($request, $field)
     {
-        if ($field === 'approval_requested' && $request->$field === true) {
-            $chore['approval_request_date'] = date('Y-m-d H:i:s', time());
-            $chore['approval_status'] = ChoreApprovalStatuses::$PENDING;
+        return ($field === 'approval_requested' && $request->$field === true);
 
-            return $chore;
-        } else {
-            return $chore;
-        }
+        // if ($field === 'approval_requested' && $request->$field === true) {
+        //     $chore['approval_request_date'] = date('Y-m-d H:i:s', time());
+        //     $chore['approval_status'] = ChoreApprovalStatuses::$PENDING;
+
+        //     return $chore;
+        // } else {
+        //     return $chore;
+        // }
+    }
+
+    public function handleApprovalRequest($chore)
+    {
+        $chore['approval_request_date'] = date('Y-m-d H:i:s', time());
+        $chore['approval_status'] = ChoreApprovalStatuses::$PENDING;
+
+        return $chore;
     }
 
     public function getChoreById($id)

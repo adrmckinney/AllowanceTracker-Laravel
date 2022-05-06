@@ -2,20 +2,23 @@
 
 namespace App\Policies;
 
+use App\Data\Traits\UserAuthorizableTrait;
 use App\Models\User;
 
 abstract class AbstractPolicy
 {
-    // public function before(User $user)
-    // {
-    //     if ($user->isAdmin()) {
-    //         return true;
-    //     }
+    use UserAuthorizableTrait;
 
-    //     if ($user->noAccess()) {
-    //         return false;
-    //     }
-    // }
+    public function before(User $user)
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->isNoAccessUser()) {
+            return false;
+        }
+    }
 
     // public function access()
     // {
