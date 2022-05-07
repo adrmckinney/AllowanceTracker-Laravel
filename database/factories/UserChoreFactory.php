@@ -2,6 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Data\Enums\ChoreApprovalStatuses;
+use App\Models\Chore;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,11 +20,12 @@ class UserChoreFactory extends Factory
     public function definition()
     {
         return [
-            // 'user_id' => User::factory(),
-            // 'approval_requested' => false,
-            // 'approval_request_date' => null,
-            // 'approval_status' => ChoreApprovalStatuses::$NONE,
-            // 'approval_date' => null,
+            'user_id' => User::factory(),
+            'chore_id' => Chore::factory(),
+            'approval_requested' => false,
+            'approval_request_date' => null,
+            'approval_status' => ChoreApprovalStatuses::$NONE,
+            'approval_date' => null,
         ];
     }
 }

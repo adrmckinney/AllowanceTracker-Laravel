@@ -66,15 +66,6 @@ class ChoreController extends Controller
     public function isRequestingApproval($request, $field)
     {
         return ($field === 'approval_requested' && $request->$field === true);
-
-        // if ($field === 'approval_requested' && $request->$field === true) {
-        //     $chore['approval_request_date'] = date('Y-m-d H:i:s', time());
-        //     $chore['approval_status'] = ChoreApprovalStatuses::$PENDING;
-
-        //     return $chore;
-        // } else {
-        //     return $chore;
-        // }
     }
 
     public function handleApprovalRequest($chore)

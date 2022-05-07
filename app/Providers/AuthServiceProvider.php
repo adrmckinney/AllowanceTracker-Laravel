@@ -6,8 +6,10 @@ use App\Data\Entities\User\UserPolicy;
 use App\Models\Chore;
 use App\Models\Permission;
 use App\Models\User;
+use App\Models\UserChore;
 use App\Policies\ChorePolicy;
 use App\Policies\PermissionPolicy;
+use App\Policies\UserChorePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -22,7 +24,8 @@ class AuthServiceProvider extends ServiceProvider
         // 'App\Models\Model' => 'App\Policies\ModelPolicy',
         User::class => UserPolicy::class,
         Permission::class => PermissionPolicy::class,
-        Chore::class => ChorePolicy::class
+        Chore::class => ChorePolicy::class,
+        UserChore::class => UserChorePolicy::class
     ];
 
     /**

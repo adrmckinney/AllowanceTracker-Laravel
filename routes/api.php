@@ -9,6 +9,7 @@ use App\Http\Controllers\LogoutController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\UserChoreController;
 use App\Http\Controllers\UserController;
 
 /*
@@ -40,6 +41,8 @@ Route::put('/user/update', [UserController::class, 'update'])->middleware('auth'
 
 Route::post('/chore', [ChoreController::class, 'createChore'])->middleware('auth');
 Route::put('/chore', [ChoreController::class, 'updateChore'])->middleware('auth');
+
+Route::post('/user-chore/add', [UserChoreController::class, 'addChoreToUser'])->middleware('auth');
 
 Route::get('/permission/{id}', [PermissionsController::class, 'getPermission'])->middleware('auth');
 Route::get('/permissions', [PermissionsController::class, 'getPermissions'])->middleware('auth');

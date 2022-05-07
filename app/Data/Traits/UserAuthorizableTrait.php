@@ -13,7 +13,9 @@ trait UserAuthorizableTrait
 
     protected function isChildOrHigher($permissionId)
     {
-        return ($permissionId === PermissionTypes::$CHILD && $permissionId === PermissionTypes::$PARENT);
+        return ($permissionId === PermissionTypes::$CHILD
+            || $permissionId === PermissionTypes::$PARENT
+        );
     }
 
     // public function isOrgPurchaserOrHigher()
