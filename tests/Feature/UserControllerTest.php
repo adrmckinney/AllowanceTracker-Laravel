@@ -80,6 +80,7 @@ class UserControllerTest extends APITestCase
     private function canGetUser()
     {
         $user = $this->authUser;
+
         $response = $this->get("/api/user/{$user->id}");
 
         $response->assertStatus(200);

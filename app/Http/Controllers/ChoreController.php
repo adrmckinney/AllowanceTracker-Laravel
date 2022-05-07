@@ -4,24 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Data\Enums\ChoreApprovalStatuses;
 use App\Models\Chore;
-use Exception;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
 
 class ChoreController extends Controller
 {
     public function createChore(Request $request)
     {
+
+        if ($this->choreExists($request->name)) {
+            abort(406, 'A chore with this name already exists.');
+        }
+
         $chore = Chore::create([
             'name' => $request['name'],
             'description' => $request['description'],
             'cost' => $request['cost'],
-            'user_id' => $request['user_id'],
-            'approval_requested' => $request['approval_requested'],
-            'approval_request_date' => $request['approval_request_date'],
-            'approval_status' => $request['approval_status'],
-            'approval_date' => $request['approval_date'],
         ]);
 
         if ($request->user()->cannot('create', $chore)) {
@@ -37,27 +34,26 @@ class ChoreController extends Controller
             'name',
             'description',
             'cost',
-            'user_id',
-            'approval_requested',
-            'approval_request_date',
-            'approval_status',
-            'approval_date'
         ];
+
+        if ($this->choreExists($request->name)) {
+            abort(406, 'A chore with this name already exists.');
+        }
 
         $chore = $this->getChoreById($request->id);
 
-        if (!$this->isRequestingApproval($request, 'approval_requested')) {
-            if ($request->user()->cannot('update', $chore)) {
-                abort(403, 'You do not have access to update this chore');
-            }
-        }
+        // if (!$this->isRequestingApproval($request, 'approval_requested')) {
+        if ($request->user()->cannot('update', $chore)) {
+            abort(403, 'You do not have access to update this chore');
+        };
+        // }
 
 
         foreach ($fields as $field) {
             if ($request->$field) {
-                if ($this->isRequestingApproval($request, $field)) {
-                    $this->handleApprovalRequest($chore);
-                }
+                // if ($this->isRequestingApproval($request, $field)) {
+                //     $this->handleApprovalRequest($chore);
+                // }
 
                 $chore->$field = $request->$field;
 
@@ -96,6 +92,6 @@ class ChoreController extends Controller
 
     public function choreExists($name)
     {
-        return Chore::where('name', '=', $name);
+        return Chore::where('name', '=', $name)->first();
     }
 }

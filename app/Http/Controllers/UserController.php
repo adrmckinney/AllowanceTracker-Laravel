@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
+    public function getUser($id)
+    {
+        return $this->getUserById($id);
+    }
+
     public function usernameExists($username)
     {
         return User::where('username', '=', $username)->first();
