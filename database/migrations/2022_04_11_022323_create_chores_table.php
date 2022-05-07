@@ -14,19 +14,10 @@ return new class extends Migration
     public function up()
     {
         Schema::create('chores', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('name');
+            $table->id();
+            $table->string('name')->unique();
             $table->mediumText('description')->nullable();
             $table->integer('cost')->nullable()->default(0);
-            $table->unsignedBigInteger('user_id');
-            $table
-                ->foreign('user_id')
-                ->references('id')
-                ->on('users');
-            $table->boolean('approval_requested')->default(0);
-            $table->timestamp('approval_request_date')->nullable();
-            $table->integer('approval_status')->default(0);
-            $table->timestamp('approval_date')->nullable();
             $table->timestamps();
         });
     }
