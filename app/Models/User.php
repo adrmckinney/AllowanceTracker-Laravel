@@ -20,6 +20,9 @@ class User extends Authenticatable
         Notifiable,
         UserPermissionsTrait;
 
+    public $timestamps = true;
+    protected $guarded = ['id', 'created_at', 'updated_at'];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -65,5 +68,10 @@ class User extends Authenticatable
     public function permissions(): HasMany
     {
         return $this->hasMany(UsersPermissions::class, 'user_id');
+    }
+
+    public function chores(): HasMany
+    {
+        return $this->hasMany(UserChore::class, 'user_id');
     }
 }

@@ -8,9 +8,14 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    public function getUser(Request $request, $id)
+    public function usernameExists($username)
     {
-        return $this->getUserById($id);
+        return User::where('username', '=', $username)->first();
+    }
+
+    public function userEmailExists($email)
+    {
+        return User::where('email', '=', $email)->first();
     }
 
     public function getUsers()
@@ -34,7 +39,7 @@ class UserController extends Controller
         }
     }
 
-    public function getUserById($id)
+    public static function getUserById($id)
     {
         return User::find($id);
     }
@@ -42,5 +47,10 @@ class UserController extends Controller
     public static function getUserByName($name)
     {
         return User::where('name', '=', $name);
+    }
+
+    public static function getUserByUsername($username)
+    {
+        return User::where('username', '=', $username);
     }
 }

@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Http\Controllers\PermissionsController;
 use Illuminate\Database\Seeder;
-use App\Http\Controllers\ChoreController;
+use DateTime;
 use Illuminate\Support\Facades\DB;
 
 class PermissionsSeeder extends Seeder
@@ -24,6 +25,13 @@ class PermissionsSeeder extends Seeder
 
     ];
 
+    protected $permissionsController;
+
+    public function __construct(PermissionsController $permissionsController)
+    {
+        $this->permissionsController = $permissionsController;
+    }
+
     /**
      * Seed the application's database.
      *
@@ -35,11 +43,13 @@ class PermissionsSeeder extends Seeder
         $this->command->getOutput()->progressStart(count($this->permissions));
 
         foreach ($this->permissions as $permission) {
-
-            DB::table('permissions')->insert([
-                'name' => $permission['name'],
-                'display_name' => $permission['display_name'],
-            ]);
+            if (!$this->permissionsController->permissionExists($permission['name'])) {
+                DB::table('permissions')->insert([
+                    'name' => $permission['name'],
+                    'display_name' => $permission['display_name'],
+                    'created_at' => new DateTime('now')
+                ]);
+            }
 
             $this->command->getOutput()->progressAdvance();
         }

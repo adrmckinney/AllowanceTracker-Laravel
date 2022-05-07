@@ -93,4 +93,9 @@ class ChoreController extends Controller
     {
         return Chore::find($id);
     }
+
+    public function choreExists($name)
+    {
+        return Chore::where('name', '=', $name);
+    }
 }

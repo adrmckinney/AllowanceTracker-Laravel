@@ -4,21 +4,20 @@ namespace Database\Seeders;
 
 use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\UserController;
-use App\Models\Permission;
-use App\Models\User;
-use App\Types\Users\UserPermissionType;
 use DateTime;
 use Illuminate\Database\Seeder;
 use Illuminate\Http\Request;
 
 class UsersPermissionsSeeder extends Seeder
 {
-    // protected $tiersFeaturesRepo;
+    protected $userController, $permissionsController;
 
-    // public function __construct(TierFeatureRepo $tiersFeaturesRepo)
-    // {
-    //     $this->tiersFeaturesRepo = $tiersFeaturesRepo;
-    // }
+    public function __construct(UserController $userController, PermissionsController $permissionsController)
+    {
+        $this->userController = $userController;
+        $this->permissionsController = $permissionsController;
+    }
+
 
     /**
      * Run the database seeds.
@@ -30,19 +29,19 @@ class UsersPermissionsSeeder extends Seeder
         $startTime = new DateTime();
         $this->command->info('Seeding UserPermissions');
 
-        $users = User::all();
-        $permissions = Permission::all();
+        $users = $this->userController->getUsers();
+        $permissions = $this->permissionsController->getPermissions();
 
         $this->command->getOutput()->progressStart(count($users) * count($permissions));
 
         foreach ($users as $user) {
-            if (UserController::getUserByName($user->name)->first()->name === "Daniel McKinney") {
+            if ($this->userController->getUserByUsername($user->username)->first()->username === "adrmckinney") {
                 $userPermission = new Request([
                     'user_id' => $user->id,
                     'name' => 'admin'
                 ]);
 
-                PermissionsController::addPermission($userPermission);
+                $this->permissionsController->addPermission($userPermission);
 
                 $this->command->getOutput()->progressAdvance();
             }
