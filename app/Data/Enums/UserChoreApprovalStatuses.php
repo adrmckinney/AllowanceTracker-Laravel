@@ -12,19 +12,31 @@ class UserChoreApprovalStatuses
     public static $STATUSES = [
         'none' => [
             'value' => 0,
-            'name' => 'No Status'
+            'display' => 'No Status'
         ],
-        'check_one' => [
+        'pending' => [
             'value' => 1,
-            'name' => 'Pending Approval'
+            'display' => 'Pending Approval',
+            'name' => 'pending'
         ],
-        'check_two' => [
+        'approved' => [
             'value' => 2,
-            'name' => 'Work Approved'
+            'display' => 'Work Approved',
+            'name' => 'approve'
         ],
-        'check_three' => [
+        'rejected' => [
             'value' => 3,
-            'name' => 'Work Not Approved'
+            'display' => 'Work Not Approved',
+            'name' => 'reject'
         ],
     ];
+
+    public static function getStatusName($value)
+    {
+        $status = collect(UserChoreApprovalStatuses::$STATUSES)->filter(function ($status) use ($value) {
+            return $status['value'] === $value;
+        });
+
+        return $status->first()['name'];
+    }
 }

@@ -53,6 +53,34 @@ class ApproveWorkTest extends APITestCase
         $this->canUnapproveWork();
     }
 
+    /** @test */
+    public function admin_user_can_reject_work()
+    {
+        $this->initAdminUser();
+        $this->canRejectWork();
+    }
+
+    /** @test */
+    public function parent_user_can_reject_work()
+    {
+        $this->initParentUser();
+        $this->canRejectWork();
+    }
+
+    /** @test */
+    public function child_user_can_reject_work()
+    {
+        $this->initChildUser();
+        $this->cannotRejectWork();
+    }
+
+    /** @test */
+    public function admin_user_can_reject_work_previously_approved()
+    {
+        $this->initAdminUser();
+        $this->canRejectWorkPreviouslyApproved();
+    }
+
     private function canApproveWork()
     {
         $userChore = $this->createUserChore();
@@ -78,7 +106,7 @@ class ApproveWorkTest extends APITestCase
         $userChore = $this->createUserChore();
         $response = $this->put('/api/user-chore/approve-work', [
             'id' => $userChore->id,
-            'approval_request' => true
+            'approval_status' => UserChoreApprovalStatuses::$APPROVED
         ]);
         $errorMessage = $response->exception->getMessage();
 
@@ -104,6 +132,69 @@ class ApproveWorkTest extends APITestCase
             ->assertJsonPath('approval_requested', 1)
             ->assertJsonPath('approval_status', UserChoreApprovalStatuses::$PENDING);
         $this->assertNotNull($response['approval_request_date']);
+        $this->assertNull($response['approval_date']);
+        $this->assertNull($response['rejected_date']);
+    }
+
+    private function canRejectWork()
+    {
+        $userChore = $this->createUserChore();
+        $userChore['approval_requested'] = true;
+        $userChore['approval_request_date'] = date('Y-m-d H:i:s', time());
+        $userChore['approval_status'] = UserChoreApprovalStatuses::$PENDING;
+        $userChore['approval_date'] = date('Y-m-d H:i:s', time());
+        $userChore->save();
+
+        $response = $this->put('/api/user-chore/approve-work', [
+            'id' => $userChore->id,
+            'approval_status' => UserChoreApprovalStatuses::$REJECTED
+        ]);
+
+        $response->assertJsonPath('id', $userChore->id)
+            ->assertJsonPath('approval_requested', 1)
+            ->assertJsonPath('approval_status', UserChoreApprovalStatuses::$REJECTED);
+        $this->assertNotNull($response['approval_request_date']);
+        $this->assertNotNull($response['rejected_date']);
+        $this->assertNull($response['approval_date']);
+    }
+
+    private function cannotRejectWork()
+    {
+        $userChore = $this->createUserChore();
+        $userChore['approval_requested'] = true;
+        $userChore['approval_request_date'] = date('Y-m-d H:i:s', time());
+        $userChore['approval_status'] = UserChoreApprovalStatuses::$PENDING;
+        $userChore['approval_date'] = date('Y-m-d H:i:s', time());
+        $userChore->save();
+        $response = $this->put('/api/user-chore/approve-work', [
+            'id' => $userChore->id,
+            'approval_status' => UserChoreApprovalStatuses::$REJECTED
+        ]);
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(403);
+        $this->assertEquals('You do not have access to reject work', $errorMessage);
+    }
+
+    private function canRejectWorkPreviouslyApproved()
+    {
+        $userChore = $this->createUserChore();
+        $userChore['approval_requested'] = true;
+        $userChore['approval_request_date'] = date('Y-m-d H:i:s', time());
+        $userChore['approval_status'] = UserChoreApprovalStatuses::$APPROVED;
+        $userChore['approval_date'] = date('Y-m-d H:i:s', time());
+        $userChore->save();
+
+        $response = $this->put('/api/user-chore/approve-work', [
+            'id' => $userChore->id,
+            'approval_status' => UserChoreApprovalStatuses::$REJECTED
+        ]);
+
+        $response->assertJsonPath('id', $userChore->id)
+            ->assertJsonPath('approval_requested', 1)
+            ->assertJsonPath('approval_status', UserChoreApprovalStatuses::$REJECTED);
+        $this->assertNotNull($response['approval_request_date']);
+        $this->assertNotNull($response['rejected_date']);
         $this->assertNull($response['approval_date']);
     }
 }

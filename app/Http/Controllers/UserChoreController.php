@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Data\Enums\UserChoreApprovalStatuses;
 use App\Models\UserChore;
-use DateTime;
 use Illuminate\Http\Request;
-use phpDocumentor\Reflection\Types\Null_;
 
 class UserChoreController extends Controller
 {
@@ -92,9 +90,10 @@ class UserChoreController extends Controller
     public function approveWork(Request $request)
     {
         $userChore = $this->getUserChoreById($request->id);
+        $statusName = UserChoreApprovalStatuses::getStatusName($request->approval_status);
 
         if ($request->user()->cannot('approveWork', $userChore)) {
-            abort(403, 'You do not have access to approve work');
+            abort(403, "You do not have access to {$statusName} work");
         }
 
         $userChore = $this->handleApproval($userChore, $request);
@@ -139,18 +138,21 @@ class UserChoreController extends Controller
             case UserChoreApprovalStatuses::$APPROVED:
                 $userChore['approval_status'] = UserChoreApprovalStatuses::$APPROVED;
                 $userChore['approval_date'] = date('Y-m-d H:i:s', time());
+                $userChore['rejected_date'] = NULL;
 
                 return $userChore;
 
             case UserChoreApprovalStatuses::$REJECTED:
                 $userChore['approval_status'] = UserChoreApprovalStatuses::$REJECTED;
                 $userChore['approval_date'] = NULL;
+                $userChore['rejected_date'] = date('Y-m-d H:i:s', time());
 
                 return $userChore;
 
             case UserChoreApprovalStatuses::$PENDING:
                 $userChore['approval_status'] = UserChoreApprovalStatuses::$PENDING;
                 $userChore['approval_date'] = NULL;
+                $userChore['rejected_date'] = NULL;
 
                 return $userChore;
 
