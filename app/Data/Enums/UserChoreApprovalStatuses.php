@@ -2,11 +2,11 @@
 
 namespace App\Data\Enums;
 
-class ChoreApprovalStatuses
+class UserChoreApprovalStatuses
 {
     public static $NONE = 0;
     public static $PENDING = 1;
-    public static $ACCEPTED = 2;
+    public static $APPROVED = 2;
     public static $REJECTED = 3;
 
     public static $STATUSES = [
@@ -24,7 +24,7 @@ class ChoreApprovalStatuses
         ],
         'check_three' => [
             'value' => 3,
-            'name' => 'Work Not Satisfactory'
+            'name' => 'Work Not Approved'
         ],
     ];
 }

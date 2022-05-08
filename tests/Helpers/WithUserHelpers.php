@@ -2,10 +2,8 @@
 
 namespace Tests\Helpers;
 
-use App\Data\Enums\PermissionTypes;
 use App\Models\Permission;
 use App\Models\User;
-use App\Models\UsersPermissions;
 
 /**
  * Trait WithUserHelpers

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\UserChoreTests;
 
-use App\Data\Enums\ChoreApprovalStatuses;
+use App\Data\Enums\UserChoreApprovalStatuses;
 use App\Models\Chore;
 use Tests\APITestCase;
 
@@ -26,33 +26,25 @@ class AddChoreToUserTest extends APITestCase
     }
 
     /** @test */
-    public function parent_user_can_request_chore_approval()
+    public function parent_user_can_assign_chore_to_user()
     {
         $this->initParentUser();
         $this->canAssignChoreToUser();
     }
 
     /** @test */
-    public function child_user_can_request_chore_approval()
+    public function child_user_can_assign_chore_to_user()
     {
         $this->initChildUser();
         $this->canAssignChoreToUser();
     }
 
     /** @test */
-    public function no_access_user_cannot_request_chore_approval()
+    public function no_access_user_cannot_assign_chore_to_user()
     {
         $this->initNoAccessUser();
         $this->cannotAssignChoreToUser();
     }
-
-    // /** @test */
-    // public function admin_user_can_approve_chore()
-    // {
-    //     $this->initAdminUser();
-    //     $this->canApproveChore();
-    // }
-
 
     private function canAssignChoreToUser()
     {
@@ -68,7 +60,7 @@ class AddChoreToUserTest extends APITestCase
             'chore_id' => $this->chore->id,
             'approval_requested' => false,
             'approval_request_date' => NULL,
-            'approval_status' => ChoreApprovalStatuses::$NONE,
+            'approval_status' => UserChoreApprovalStatuses::$NONE,
             'approval_date' => NULL,
         ]);
     }
@@ -93,7 +85,7 @@ class AddChoreToUserTest extends APITestCase
         $this->assertEquals($this->chore->name, $response['name']);
         $this->assertEquals($input['approval_requested'], $response['approval_requested']);
         $this->assertNotNull($response['approval_request_date']);
-        $this->assertEquals(ChoreApprovalStatuses::$PENDING, $response['approval_status']);
+        $this->assertEquals(UserChoreApprovalStatuses::$PENDING, $response['approval_status']);
     }
 
     private function cannotRequestChoreApproval()
@@ -114,6 +106,6 @@ class AddChoreToUserTest extends APITestCase
         $this->assertEquals($this->chore->name, $response['name']);
         $this->assertEquals($input['approval_requested'], $response['approval_requested']);
         $this->assertNotNull($response['approval_request_date']);
-        $this->assertEquals(ChoreApprovalStatuses::$PENDING, $response['approval_status']);
+        $this->assertEquals(UserChoreApprovalStatuses::$PENDING, $response['approval_status']);
     }
 }
