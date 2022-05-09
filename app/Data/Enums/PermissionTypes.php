@@ -9,7 +9,7 @@ class PermissionTypes
     public static $PARENT = 2;
     public static $CHILD = 3;
 
-    public static $STATUSES = [
+    public static $PERMISSIONS = [
         'none' => [
             'value' => 0,
             'display_name' => 'No Status',
@@ -31,4 +31,12 @@ class PermissionTypes
             'name' => 'child'
         ],
     ];
+
+    public static function getPermissionName($value)
+    {
+        return collect(PermissionTypes::$PERMISSIONS)
+            ->filter(function ($permission) use ($value) {
+                return $permission['value'] === $value;
+            })->first()['name'];
+    }
 }

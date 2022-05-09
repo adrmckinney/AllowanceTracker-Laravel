@@ -20,241 +20,250 @@ class PasswordResetTest extends APITestCase
     const USER_ORIGINAL_PASSWORD = 'secret';
 
     /** @test */
-    public function testShowPasswordResetRequestPage()
+    public function admin_user_can_reset_password()
     {
-        $this
-            ->get(route(self::ROUTE_PASSWORD_REQUEST))
-            ->assertSuccessful()
-            ->assertSee('Reset Password')
-            ->assertSee('E-Mail Address')
-            ->assertSee('Send Password Reset Link');
+        $this->initAdminUser();
+        $this->canResetPassword();
     }
 
-    /** @test */
-    public function testSubmitPasswordResetRequestInvalidEmail()
+    public function canResetPassword()
     {
-        $this
-            ->followingRedirects()
-            ->from(route(self::ROUTE_PASSWORD_REQUEST))
-            ->post(route(self::ROUTE_PASSWORD_EMAIL), [
-                'email' => Str::random(8),
-            ])
-            ->assertSuccessful()
-            ->assertSee(__('validation.email', [
-                'attribute' => 'email',
-            ]));
-    }
-
-    /** @test */
-    public function testSubmitPasswordResetRequestEmailNotFound()
-    {
-        $this
-            ->followingRedirects()
-            ->from(route(self::ROUTE_PASSWORD_REQUEST))
-            ->post(route(self::ROUTE_PASSWORD_EMAIL), [
-                'email' => $this->faker->unique()->safeEmail,
-            ])
-            ->assertSuccessful()
-            ->assertSee(e(__('passwords.user')));
-    }
-
-    /** @test */
-    public function testSubmitPasswordResetRequest()
-    {
-        $user = User::factory()->create();
-
-        $this
-            ->followingRedirects()
-            ->from(route(self::ROUTE_PASSWORD_REQUEST))
-            ->post(route(self::ROUTE_PASSWORD_EMAIL), [
-                'email' => $user->email,
-            ])
-            ->assertSuccessful()
-            ->assertSee(__('passwords.sent'));
-
-        $this->Notification::assertSentTo($user, ResetPassword::class);
-    }
-
-    /** @test */
-    public function testSubmitPasswordResetInvalidEmail()
-    {
-        $user = User::factory()->create([
-            'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
+        $response = $this->post('/api/password/reset', [
+            'id' => $this->authUser->id,
+            'email' => $this->authUser->email,
+            'password' => 'aNewPassword1',
+            'password_confirmation' => 'aNewPassword1',
+            'api_token' => $this->authUser->api_token,
         ]);
 
-        $token = Password::broker()->createToken($user);
-
-        $password = Str::random();
-
-        $this
-            ->followingRedirects()
-            ->from(route(self::ROUTE_PASSWORD_RESET, [
-                'token' => $token,
-            ]))
-            ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
-                'token' => $token,
-                'email' => Str::random(),
-                'password' => $password,
-                'password_confirmation' => $password,
-            ])
-            ->assertSuccessful()
-            ->assertSee(__('validation.email', [
-                'attribute' => 'email',
-            ]));
-
-        $user->refresh();
-
-        $this->assertFalse(Hash::check($password, $user->password));
-
-        $this->assertTrue(Hash::check(
-            self::USER_ORIGINAL_PASSWORD,
-            $user->password
-        ));
+        // $this->echoResponse($response);
     }
 
-    /** @test */
-    public function testSubmitPasswordResetEmailNotFound()
-    {
-        $user = User::factory()->create([
-            'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
-        ]);
+    // /** @test */
+    // public function testSubmitPasswordResetRequestInvalidEmail()
+    // {
+    //     $this
+    //         ->followingRedirects()
+    //         ->from(route(self::ROUTE_PASSWORD_REQUEST))
+    //         ->post(route(self::ROUTE_PASSWORD_EMAIL), [
+    //             'email' => Str::random(8),
+    //         ])
+    //         ->assertSuccessful()
+    //         ->assertSee(__('validation.email', [
+    //             'attribute' => 'email',
+    //         ]));
+    // }
 
-        $token = Password::broker()->createToken($user);
+    // /** @test */
+    // public function testSubmitPasswordResetRequestEmailNotFound()
+    // {
+    //     $this
+    //         ->followingRedirects()
+    //         ->from(route(self::ROUTE_PASSWORD_REQUEST))
+    //         ->post(route(self::ROUTE_PASSWORD_EMAIL), [
+    //             'email' => $this->faker->unique()->safeEmail,
+    //         ])
+    //         ->assertSuccessful()
+    //         ->assertSee(e(__('passwords.user')));
+    // }
 
-        $password = Str::random();
+    // /** @test */
+    // public function testSubmitPasswordResetRequest()
+    // {
+    //     $user = User::factory()->create();
 
-        $this
-            ->followingRedirects()
-            ->from(route(self::ROUTE_PASSWORD_RESET, [
-                'token' => $token,
-            ]))
-            ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
-                'token' => $token,
-                'email' => $this->faker->unique()->safeEmail,
-                'password' => $password,
-                'password_confirmation' => $password,
-            ])
-            ->assertSuccessful()
-            ->assertSee(e(__('passwords.user')));
+    //     $this
+    //         ->followingRedirects()
+    //         ->from(route(self::ROUTE_PASSWORD_REQUEST))
+    //         ->post(route(self::ROUTE_PASSWORD_EMAIL), [
+    //             'email' => $user->email,
+    //         ])
+    //         ->assertSuccessful()
+    //         ->assertSee(__('passwords.sent'));
 
-        $user->refresh();
+    //     $this->Notification::assertSentTo($user, ResetPassword::class);
+    // }
 
-        $this->assertFalse(Hash::check($password, $user->password));
+    // /** @test */
+    // public function testSubmitPasswordResetInvalidEmail()
+    // {
+    //     $user = User::factory()->create([
+    //         'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
+    //     ]);
 
-        $this->assertTrue(Hash::check(
-            self::USER_ORIGINAL_PASSWORD,
-            $user->password
-        ));
-    }
+    //     $token = Password::broker()->createToken($user);
 
-    /** @test */
-    public function testSubmitPasswordResetPasswordMismatch()
-    {
-        $user = User::factory()->create([
-            'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
-        ]);
+    //     $password = Str::random();
 
-        $token = Password::broker()->createToken($user);
+    //     $this
+    //         ->followingRedirects()
+    //         ->from(route(self::ROUTE_PASSWORD_RESET, [
+    //             'token' => $token,
+    //         ]))
+    //         ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
+    //             'token' => $token,
+    //             'email' => Str::random(),
+    //             'password' => $password,
+    //             'password_confirmation' => $password,
+    //         ])
+    //         ->assertSuccessful()
+    //         ->assertSee(__('validation.email', [
+    //             'attribute' => 'email',
+    //         ]));
 
-        $password = Str::random();
-        $password_confirmation = Str::random();
+    //     $user->refresh();
 
-        $this
-            ->followingRedirects()
-            ->from(route(self::ROUTE_PASSWORD_RESET, [
-                'token' => $token,
-            ]))
-            ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
-                'token' => $token,
-                'email' => $user->email,
-                'password' => $password,
-                'password_confirmation' => $password_confirmation,
-            ])
-            ->assertSuccessful()
-            ->assertSee(__('validation.confirmed', [
-                'attribute' => 'password',
-            ]));
+    //     $this->assertFalse(Hash::check($password, $user->password));
 
-        $user->refresh();
+    //     $this->assertTrue(Hash::check(
+    //         self::USER_ORIGINAL_PASSWORD,
+    //         $user->password
+    //     ));
+    // }
 
-        $this->assertFalse(Hash::check($password, $user->password));
+    // /** @test */
+    // public function testSubmitPasswordResetEmailNotFound()
+    // {
+    //     $user = User::factory()->create([
+    //         'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
+    //     ]);
 
-        $this->assertTrue(Hash::check(
-            self::USER_ORIGINAL_PASSWORD,
-            $user->password
-        ));
-    }
+    //     $token = Password::broker()->createToken($user);
 
-    /** @test */
-    public function testSubmitPasswordResetPasswordTooShort()
-    {
-        $user = User::factory()->create([
-            'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
-        ]);
+    //     $password = Str::random();
 
-        $token = Password::broker()->createToken($user);
+    //     $this
+    //         ->followingRedirects()
+    //         ->from(route(self::ROUTE_PASSWORD_RESET, [
+    //             'token' => $token,
+    //         ]))
+    //         ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
+    //             'token' => $token,
+    //             'email' => $this->faker->unique()->safeEmail,
+    //             'password' => $password,
+    //             'password_confirmation' => $password,
+    //         ])
+    //         ->assertSuccessful()
+    //         ->assertSee(e(__('passwords.user')));
 
-        $password = Str::random(5);
+    //     $user->refresh();
 
-        $this
-            ->followingRedirects()
-            ->from(route(self::ROUTE_PASSWORD_RESET, [
-                'token' => $token,
-            ]))
-            ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
-                'token' => $token,
-                'email' => $user->email,
-                'password' => $password,
-                'password_confirmation' => $password,
-            ])
-            ->assertSuccessful()
-            ->assertSee(__('validation.min.string', [
-                'attribute' => 'password',
-                'min' => 6,
-            ]));
+    //     $this->assertFalse(Hash::check($password, $user->password));
 
-        $user->refresh();
+    //     $this->assertTrue(Hash::check(
+    //         self::USER_ORIGINAL_PASSWORD,
+    //         $user->password
+    //     ));
+    // }
 
-        $this->assertFalse(Hash::check($password, $user->password));
+    // /** @test */
+    // public function testSubmitPasswordResetPasswordMismatch()
+    // {
+    //     $user = User::factory()->create([
+    //         'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
+    //     ]);
 
-        $this->assertTrue(Hash::check(
-            self::USER_ORIGINAL_PASSWORD,
-            $user->password
-        ));
-    }
+    //     $token = Password::broker()->createToken($user);
 
-    /** @test */
-    public function testSubmitPasswordReset()
-    {
-        $user = User::factory()->create([
-            'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
-        ]);
+    //     $password = Str::random();
+    //     $password_confirmation = Str::random();
 
-        $token = Password::broker()->createToken($user);
+    //     $this
+    //         ->followingRedirects()
+    //         ->from(route(self::ROUTE_PASSWORD_RESET, [
+    //             'token' => $token,
+    //         ]))
+    //         ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
+    //             'token' => $token,
+    //             'email' => $user->email,
+    //             'password' => $password,
+    //             'password_confirmation' => $password_confirmation,
+    //         ])
+    //         ->assertSuccessful()
+    //         ->assertSee(__('validation.confirmed', [
+    //             'attribute' => 'password',
+    //         ]));
 
-        $password = Str::random();
+    //     $user->refresh();
 
-        $this
-            ->followingRedirects()
-            ->from(route(self::ROUTE_PASSWORD_RESET, [
-                'token' => $token,
-            ]))
-            ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
-                'token' => $token,
-                'email' => $user->email,
-                'password' => $password,
-                'password_confirmation' => $password,
-            ])
-            ->assertSuccessful()
-            ->assertSee(__('passwords.reset'));
+    //     $this->assertFalse(Hash::check($password, $user->password));
 
-        $user->refresh();
+    //     $this->assertTrue(Hash::check(
+    //         self::USER_ORIGINAL_PASSWORD,
+    //         $user->password
+    //     ));
+    // }
 
-        $this->assertFalse(Hash::check(
-            self::USER_ORIGINAL_PASSWORD,
-            $user->password
-        ));
+    // /** @test */
+    // public function testSubmitPasswordResetPasswordTooShort()
+    // {
+    //     $user = User::factory()->create([
+    //         'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
+    //     ]);
 
-        $this->assertTrue(Hash::check($password, $user->password));
-    }
+    //     $token = Password::broker()->createToken($user);
+
+    //     $password = Str::random(5);
+
+    //     $this
+    //         ->followingRedirects()
+    //         ->from(route(self::ROUTE_PASSWORD_RESET, [
+    //             'token' => $token,
+    //         ]))
+    //         ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
+    //             'token' => $token,
+    //             'email' => $user->email,
+    //             'password' => $password,
+    //             'password_confirmation' => $password,
+    //         ])
+    //         ->assertSuccessful()
+    //         ->assertSee(__('validation.min.string', [
+    //             'attribute' => 'password',
+    //             'min' => 6,
+    //         ]));
+
+    //     $user->refresh();
+
+    //     $this->assertFalse(Hash::check($password, $user->password));
+
+    //     $this->assertTrue(Hash::check(
+    //         self::USER_ORIGINAL_PASSWORD,
+    //         $user->password
+    //     ));
+    // }
+
+    // /** @test */
+    // public function testSubmitPasswordReset()
+    // {
+    //     $user = User::factory()->create([
+    //         'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
+    //     ]);
+
+    //     $token = Password::broker()->createToken($user);
+
+    //     $password = Str::random();
+
+    //     $this
+    //         ->followingRedirects()
+    //         ->from(route(self::ROUTE_PASSWORD_RESET, [
+    //             'token' => $token,
+    //         ]))
+    //         ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
+    //             'token' => $token,
+    //             'email' => $user->email,
+    //             'password' => $password,
+    //             'password_confirmation' => $password,
+    //         ])
+    //         ->assertSuccessful()
+    //         ->assertSee(__('passwords.reset'));
+
+    //     $user->refresh();
+
+    //     $this->assertFalse(Hash::check(
+    //         self::USER_ORIGINAL_PASSWORD,
+    //         $user->password
+    //     ));
+
+    //     $this->assertTrue(Hash::check($password, $user->password));
+    // }
 }

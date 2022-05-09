@@ -42,19 +42,13 @@ class ChoreController extends Controller
 
         $chore = $this->getChoreById($request->id);
 
-        // if (!$this->isRequestingApproval($request, 'approval_requested')) {
         if ($request->user()->cannot('update', $chore)) {
             abort(403, 'You do not have access to update this chore');
         };
-        // }
 
 
         foreach ($fields as $field) {
             if ($request->$field) {
-                // if ($this->isRequestingApproval($request, $field)) {
-                //     $this->handleApprovalRequest($chore);
-                // }
-
                 $chore->$field = $request->$field;
 
                 $chore->save();

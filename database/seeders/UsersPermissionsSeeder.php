@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\UserController;
+use App\Models\Permission;
 use DateTime;
 use Illuminate\Database\Seeder;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ class UsersPermissionsSeeder extends Seeder
         $this->command->info('Seeding UserPermissions');
 
         $users = $this->userController->getUsers();
-        $permissions = $this->permissionsController->getPermissions();
+        $permissions = Permission::all();
 
         $this->command->getOutput()->progressStart(count($users) * count($permissions));
 

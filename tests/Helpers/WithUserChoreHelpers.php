@@ -5,7 +5,7 @@ namespace Tests\Helpers;
 use App\Models\UserChore;
 
 /**
- * Trait WithUserHelpers
+ * Trait WithUserChoreHelpers
  * @package Tests\Helpers
  */
 trait WithUserChoreHelpers

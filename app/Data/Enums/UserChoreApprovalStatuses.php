@@ -33,10 +33,9 @@ class UserChoreApprovalStatuses
 
     public static function getStatusName($value)
     {
-        $status = collect(UserChoreApprovalStatuses::$STATUSES)->filter(function ($status) use ($value) {
-            return $status['value'] === $value;
-        });
-
-        return $status->first()['name'];
+        return collect(UserChoreApprovalStatuses::$STATUSES)
+            ->filter(function ($status) use ($value) {
+                return $status['value'] === $value;
+            })->first()['name'];
     }
 }

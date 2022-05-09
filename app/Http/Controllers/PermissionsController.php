@@ -17,9 +17,15 @@ class PermissionsController extends Controller
     }
 
 
-    public function getPermissions()
+    public function getPermissions(Request $request)
     {
-        return Permission::all();
+        $permissions = Permission::all();
+
+        if ($request->user()->cannot('getMany', $permissions->first())) {
+            abort(403, 'You do not have access to get permissions');
+        }
+
+        return $permissions;
     }
 
     public function createPermission(Request $request)
@@ -29,44 +35,39 @@ class PermissionsController extends Controller
             'display_name' => $request->display_name,
         ]);
 
+        if ($request->user()->cannot('create', $permission)) {
+            abort(403, 'You do not have access to create a permission');
+        }
+
         return $permission;
     }
 
-    public function addPermission(Request $request)
+    public function updatePermission(Request $request)
     {
-        // dump('user in perms cont', $request);
-        // $user = $request->user() ? $request->user : UserController::getUserById($request->user_id);
-        // dump('user', $user->permissions);
-        // $permissionId = $user->permissions->toArray()[0]['permission_id'];
-        // dump('permId', $permissionId);
-        // if ($request->user()->cannot('add', Permission::class)) {
-        //     abort(403);
-        // }
+        $fields = [
+            'name',
+            'display_name',
+        ];
 
-        // $this->authorize('add', Permission::class);
-
-        $user_id = $request->user_id;
-        $permissionName = $request->name;
-
-        $permission = $this->getPermissionByName($permissionName);
-
-        if ($permission) {
-            $userPermission = UsersPermissions::where('user_id', '=', $user_id)
-                ->where('permission_id', '=', $permission->id)
-                ->first();
-            if (!$userPermission) {
-                UsersPermissions::create([
-                    'user_id' => $user_id,
-                    'permission_id' => $permission->id,
-                ]);
-            } else {
-                throw new Exception(
-                    "Permission: User already has this permission - {$permissionName}"
-                );
-            }
-        } else {
-            throw new Exception("Permission: $permissionName not found.");
+        if ($this->permissionExists($request->name)) {
+            abort(406, 'A permission with this name already exists.');
         }
+
+        $permission = $this->getPermissionById($request->id);
+
+        if ($request->user()->cannot('update', $permission)) {
+            abort(403, 'You do not have access to update this permission');
+        };
+
+        foreach ($fields as $field) {
+            if ($request->$field) {
+                $permission->$field = $request->$field;
+
+                $permission->save();
+            }
+        }
+
+        return $permission;
     }
 
     public function getPermissionById($id)

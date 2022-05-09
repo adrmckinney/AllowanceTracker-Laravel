@@ -11,6 +11,7 @@ use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\UserChoreController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserPermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,7 +34,7 @@ Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestF
 Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 
 Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm']);
-Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.reset.submit');
+Route::post('password/reset', [ResetPasswordController::class, 'resetPassword'])->middleware('auth');
 
 Route::get('/user/{id}', [UserController::class, 'getUser'])->middleware('auth');
 Route::get('/users', [UserController::class, 'getUsers'])->middleware('auth');
@@ -54,8 +55,9 @@ Route::get('/permission/{id}', [PermissionsController::class, 'getPermission'])-
 Route::get('/permissions', [PermissionsController::class, 'getPermissions'])->middleware('auth');
 Route::post('/permission/create', [PermissionsController::class, 'createPermission'])->middleware('auth');
 Route::put('/permission/update', [PermissionsController::class, 'updatePermission'])->middleware('auth');
-Route::post('/permission/add', [PermissionsController::class, 'addPermission'])->middleware('auth');
-Route::put('/permission/remove', [PermissionsController::class, 'removePermission'])->middleware('auth');
+
+Route::post('/user-permission/add', [UserPermissionController::class, 'addPermission'])->middleware('auth');
+Route::put('/user-permission/remove', [UserPermissionController::class, 'removePermission'])->middleware('auth');
 
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {

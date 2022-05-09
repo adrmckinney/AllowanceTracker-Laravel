@@ -19,9 +19,4 @@ abstract class AbstractPolicy
             return false;
         }
     }
-
-    // public function access()
-    // {
-    //     return true;
-    // }
 }

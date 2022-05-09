@@ -60,11 +60,6 @@ class User extends Authenticatable
     //     return $this->hasMany(Chore::class, 'user_id');
     // }
 
-    // public function __construct(UserType $newUser)
-    // {
-
-    // }
-
     public function permissions(): HasMany
     {
         return $this->hasMany(UsersPermissions::class, 'user_id');

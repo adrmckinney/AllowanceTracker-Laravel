@@ -68,7 +68,7 @@ class ApproveWorkTest extends APITestCase
     }
 
     /** @test */
-    public function child_user_can_reject_work()
+    public function child_user_cannot_reject_work()
     {
         $this->initChildUser();
         $this->cannotRejectWork();
@@ -79,6 +79,13 @@ class ApproveWorkTest extends APITestCase
     {
         $this->initAdminUser();
         $this->canRejectWorkPreviouslyApproved();
+    }
+
+    /** @test */
+    public function admin_user_can_approve_work_previously_rejected()
+    {
+        $this->initAdminUser();
+        $this->canApproveWorkPreviouslyRejected();
     }
 
     private function canApproveWork()
@@ -196,5 +203,27 @@ class ApproveWorkTest extends APITestCase
         $this->assertNotNull($response['approval_request_date']);
         $this->assertNotNull($response['rejected_date']);
         $this->assertNull($response['approval_date']);
+    }
+
+    private function canApproveWorkPreviouslyRejected()
+    {
+        $userChore = $this->createUserChore();
+        $userChore['approval_requested'] = true;
+        $userChore['approval_request_date'] = date('Y-m-d H:i:s', time());
+        $userChore['approval_status'] = UserChoreApprovalStatuses::$REJECTED;
+        $userChore['rejected_date'] = date('Y-m-d H:i:s', time());
+        $userChore->save();
+
+        $response = $this->put('/api/user-chore/approve-work', [
+            'id' => $userChore->id,
+            'approval_status' => UserChoreApprovalStatuses::$APPROVED
+        ]);
+
+        $response->assertJsonPath('id', $userChore->id)
+            ->assertJsonPath('approval_requested', 1)
+            ->assertJsonPath('approval_status', UserChoreApprovalStatuses::$APPROVED);
+        $this->assertNotNull($response['approval_request_date']);
+        $this->assertNotNull($response['approval_date']);
+        $this->assertNull($response['rejected_date']);
     }
 }
