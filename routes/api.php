@@ -57,7 +57,7 @@ Route::post('/permission/create', [PermissionsController::class, 'createPermissi
 Route::put('/permission/update', [PermissionsController::class, 'updatePermission'])->middleware('auth');
 
 Route::post('/user-permission/add', [UserPermissionController::class, 'addPermission'])->middleware('auth');
-Route::put('/user-permission/remove', [UserPermissionController::class, 'removePermission'])->middleware('auth');
+Route::put('/user-permission/update', [UserPermissionController::class, 'updatePermission'])->middleware('auth');
 
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {

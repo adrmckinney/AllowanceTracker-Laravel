@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Http\Controllers\UserController;
+use App\Models\User;
 use DateTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -41,14 +42,12 @@ class UserSeeder extends Seeder
         foreach ($this->users as $user) {
             // $updateChore = $this->choreController->getChoreById($chore['has to be something else'])
             if (!$this->userController->usernameExists($user['username']) || !$this->userController->userEmailExists($user['email'])) {
-                DB::table('users')->insert([
+                User::factory()->create([
                     'name' => $user['name'],
                     'email' => $user['email'],
                     'username' => $user['username'],
                     'wallet' => $user['wallet'],
                     'password' => Hash::make($user['password']),
-                    'api_token' => Str::random(60),
-                    'created_at' => new DateTime('now')
                 ]);
             }
 

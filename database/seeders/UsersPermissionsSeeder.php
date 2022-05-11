@@ -2,21 +2,28 @@
 
 namespace Database\Seeders;
 
+use App\Data\Enums\PermissionTypes;
 use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserPermissionController;
 use App\Models\Permission;
+use App\Models\UsersPermissions;
 use DateTime;
 use Illuminate\Database\Seeder;
 use Illuminate\Http\Request;
 
 class UsersPermissionsSeeder extends Seeder
 {
-    protected $userController, $permissionsController;
+    protected $userController, $permissionsController, $usersPermissionsController;
 
-    public function __construct(UserController $userController, PermissionsController $permissionsController)
-    {
+    public function __construct(
+        UserController $userController,
+        PermissionsController $permissionsController,
+        UserPermissionController $usersPermissionsController
+    ) {
         $this->userController = $userController;
         $this->permissionsController = $permissionsController;
+        $this->usersPermissionsController = $usersPermissionsController;
     }
 
 
@@ -37,12 +44,10 @@ class UsersPermissionsSeeder extends Seeder
 
         foreach ($users as $user) {
             if ($this->userController->getUserByUsername($user->username)->first()->username === "adrmckinney") {
-                $userPermission = new Request([
+                UsersPermissions::factory()->create([
                     'user_id' => $user->id,
-                    'name' => 'admin'
+                    'permission_id' => PermissionTypes::$ADMIN
                 ]);
-
-                $this->permissionsController->addPermission($userPermission);
 
                 $this->command->getOutput()->progressAdvance();
             }

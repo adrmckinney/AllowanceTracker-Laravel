@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Data\Entities\User\UserPolicy;
 use App\Models\Chore;
 use App\Models\Permission;
 use App\Models\User;
@@ -12,6 +11,7 @@ use App\Policies\ChorePolicy;
 use App\Policies\PermissionPolicy;
 use App\Policies\UserChorePolicy;
 use App\Policies\UserPermissionPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 

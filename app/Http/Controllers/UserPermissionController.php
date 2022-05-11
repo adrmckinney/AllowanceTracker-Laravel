@@ -57,6 +57,21 @@ class UserPermissionController extends Controller
         }
     }
 
+    public function updatePermission(Request $request)
+    {
+        $userPermission = $this->getUserPermissionById($request->user_id);
+
+        if ($request->user()->cannot('update', $userPermission)) {
+            abort(403, 'You do not have access to update permissions');
+        };
+
+        if (!!$userPermission) {
+            $userPermission->delete();
+        };
+
+        return $this->addPermission($request);
+    }
+
     public function getUserPermissionById($id)
     {
         return UsersPermissions::where('id', '=', $id)->first();

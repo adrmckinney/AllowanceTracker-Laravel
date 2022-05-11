@@ -48,7 +48,7 @@ trait WithUserHelpers
         $this->createPermissions();
         $this->authUser = User::factory()->create();
         $this->post('/api/login', ['username' => $this->authUser->username, 'password' => 'password']);
-        return $this->authUser;
+        $this->authUser->addPermission('no_access');
     }
 
     protected function initTestUser()
@@ -61,6 +61,10 @@ trait WithUserHelpers
 
     public function createPermissions()
     {
+        Permission::factory()->create([
+            'name' => 'no_access',
+            'display_name' => 'No Access',
+        ]);
         Permission::factory()->create([
             'name' => 'admin',
             'display_name' => 'Admin',

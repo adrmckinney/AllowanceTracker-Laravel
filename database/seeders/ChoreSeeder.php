@@ -2,12 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Data\Enums\ChoreApprovalStatuses;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Http\Controllers\ChoreController;
-use DateTime;
-use Illuminate\Support\Facades\DB;
+use App\Models\Chore;
 
 class ChoreSeeder extends Seeder
 {
@@ -66,11 +63,10 @@ class ChoreSeeder extends Seeder
             // $updateChore = $this->choreController->getChoreById($chore['has to be something else'])
 
             if (!$this->choreController->choreExists($chore['name'])) {
-                DB::table('chores')->insert([
+                Chore::factory()->create([
                     'name' => $chore['name'],
                     'description' => $chore['description'],
                     'cost' => $chore['cost'],
-                    'created_at' => new DateTime('now')
                 ]);
             }
 

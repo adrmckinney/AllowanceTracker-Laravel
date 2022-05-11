@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Http\Controllers\PermissionsController;
+use App\Models\Permission;
 use Illuminate\Database\Seeder;
 use DateTime;
 use Illuminate\Support\Facades\DB;
@@ -10,6 +11,10 @@ use Illuminate\Support\Facades\DB;
 class PermissionsSeeder extends Seeder
 {
     private $permissions = [
+        [
+            'name' => 'no_access',
+            'display_name' => 'No Access',
+        ],
         [
             'name' => 'admin',
             'display_name' => 'Admin',
@@ -44,10 +49,9 @@ class PermissionsSeeder extends Seeder
 
         foreach ($this->permissions as $permission) {
             if (!$this->permissionsController->permissionExists($permission['name'])) {
-                DB::table('permissions')->insert([
+                Permission::factory()->create([
                     'name' => $permission['name'],
                     'display_name' => $permission['display_name'],
-                    'created_at' => new DateTime('now')
                 ]);
             }
 

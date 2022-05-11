@@ -4,9 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\UserController;
 use App\Models\User;
-// use PHPUnit\Framework\TestCase;
 use Tests\APITestCase;
-use Tests\TestCase;
 
 class GetUserByNameTest extends ApiTestCase
 {

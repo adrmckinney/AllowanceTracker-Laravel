@@ -35,6 +35,10 @@ class UserController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        // if ($request->user()->cannot('update', $user)) {
+        //     abort(403, 'You do not have access to this user');
+        // };
+
         foreach ($fields as $field) {
             if ($request->$field) {
                 $user->$field = $request->$field;

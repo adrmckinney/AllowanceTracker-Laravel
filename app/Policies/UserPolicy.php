@@ -3,9 +3,13 @@
 namespace App\Policies;
 
 use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class UserPolicy extends AbstractPolicy
 {
+
+    use HandlesAuthorization;
+
     public function view()
     {
         return true;
@@ -14,6 +18,18 @@ class UserPolicy extends AbstractPolicy
     public function admin()
     {
         return false;
+    }
+
+    /**
+     * Determine if user can be fetched user data.
+     *
+     * @param  \App\Models\User  $user
+     * @return bool
+     */
+    public function update(User $user, User $routeUser)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+        return $this->isParent($permissionId);
     }
 
     public function viewDashboard(User $user)

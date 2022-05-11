@@ -3,11 +3,9 @@
 namespace Tests\Feature\UserPermissionTests;
 
 use App\Data\Enums\PermissionTypes;
-use App\Http\Controllers\PermissionsController;
 use App\Models\Permission;
 use App\Models\User;
 use App\Models\UsersPermissions;
-use Illuminate\Http\Request;
 use Tests\APITestCase;
 
 
@@ -118,7 +116,7 @@ class AddPermissionToUserTest extends APITestCase
     {
         $permission = $this->getPermission($permLevel);
 
-        $oldUserPermission = UsersPermissions::factory()->create([
+        UsersPermissions::factory()->create([
             'user_id' => $this->user->id,
             'permission_id' => $permission->id
         ]);
@@ -132,20 +130,6 @@ class AddPermissionToUserTest extends APITestCase
 
         $response->assertStatus(406);
         $this->assertEquals("Permission: User already has this permission - {$permission->name}", $errorMessage);
-
-        // $this->echoResponse($response);
-
-        // $this->expectExceptionMessage("Permission: User already has this permission - {$permission->name}");
-    }
-
-
-    public function cannotUpdateUser($target, $old, $new)
-    {
-        $response = $this->put('/api/user/update', [$target => $new]);
-        $error = $response['error'];
-
-        $response->assertStatus(200);
-        $this->assertEquals("Only a parent has access to change this", $error);
     }
 
     private function getPermission($type)
