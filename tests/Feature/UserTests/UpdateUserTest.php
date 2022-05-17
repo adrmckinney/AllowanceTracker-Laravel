@@ -26,36 +26,116 @@ class UpdateUserTest extends APITestCase
         $this->canUpdateUser('username', $oldUserName, $newUserName);
     }
 
-    // /** @test */
-    // public function user_can_update_name()
-    // {
-    //     $this->initTestUser();
-    //     $oldName = $this->authUser->name;
-    //     $newName = $this->faker()->name();
-    //     $this->canUpdateUser('name', $oldName, $newName);
-    // }
+    /** @test */
+    public function child_user_can_update_username()
+    {
+        $this->initChildUser();
+        $oldUserName = $this->authUser->username;
+        $newUserName = $this->faker()->userName();
+        $this->canUpdateUser('username', $oldUserName, $newUserName);
+    }
 
-    // /** @test */
-    // public function user_can_update_email()
-    // {
-    //     $this->initTestUser();
-    //     $oldEmail = $this->authUser->email;
-    //     $newEmail = $this->faker()->email();
-    //     $this->canUpdateUser('email', $oldEmail, $newEmail);
-    // }
+    /** @test */
+    public function no_access_user_cannot_update_username()
+    {
+        $this->initNoAccessUser();
+        $oldUserName = $this->authUser->username;
+        $newUserName = $this->faker()->userName();
+        $this->cannotUpdateUser('username', $oldUserName, $newUserName);
+    }
 
-    // /** @test */
-    // public function user_can_update_wallet()
-    // {
-    //     $this->initTestUser();
-    //     $oldAccountBalance = $this->authUser->wallet;
-    //     $newAccountBalance = 100;
-    //     $this->canUpdateUser('wallet', $oldAccountBalance, $newAccountBalance);
-    // }
+    /** @test */
+    public function admin_user_can_update_name()
+    {
+        $this->initAdminUser();
+        $oldName = $this->authUser->name;
+        $newName = $this->faker()->name();
+        $this->canUpdateUser('name', $oldName, $newName);
+    }
 
+    /** @test */
+    public function parent_user_can_update_name()
+    {
+        $this->initParentUser();
+        $oldName = $this->authUser->name;
+        $newName = $this->faker()->name();
+        $this->canUpdateUser('name', $oldName, $newName);
+    }
+
+    /** @test */
+    public function child_user_can_update_name()
+    {
+        $this->initChildUser();
+        $oldName = $this->authUser->name;
+        $newName = $this->faker()->name();
+        $this->canUpdateUser('name', $oldName, $newName);
+    }
+
+    /** @test */
+    public function admin_user_can_update_email()
+    {
+        $this->initAdminUser();
+        $oldEmail = $this->authUser->email;
+        $newEmail = $this->faker()->email();
+        $this->canUpdateUser('email', $oldEmail, $newEmail);
+    }
+
+    /** @test */
+    public function parent_user_can_update_email()
+    {
+        $this->initParentUser();
+        $oldEmail = $this->authUser->email;
+        $newEmail = $this->faker()->email();
+        $this->canUpdateUser('email', $oldEmail, $newEmail);
+    }
+
+    /** @test */
+    public function child_user_can_update_email()
+    {
+        $this->initChildUser();
+        $oldEmail = $this->authUser->email;
+        $newEmail = $this->faker()->email();
+        $this->canUpdateUser('email', $oldEmail, $newEmail);
+    }
+
+    /** @test */
+    public function admin_user_can_update_wallet()
+    {
+        $this->initAdminUser();
+        $oldAccountBalance = $this->authUser->wallet;
+        $newAccountBalance = 100;
+        $this->canUpdateUser('wallet', $oldAccountBalance, $newAccountBalance);
+    }
+
+    /** @test */
+    public function parent_user_can_update_wallet()
+    {
+        $this->initParentUser();
+        $oldAccountBalance = $this->authUser->wallet;
+        $newAccountBalance = 100;
+        $this->canUpdateUser('wallet', $oldAccountBalance, $newAccountBalance);
+    }
+
+    /** @test */
+    public function child_user_cannot_update_wallet()
+    {
+        $this->initChildUser();
+        $oldAccountBalance = $this->authUser->wallet;
+        $newAccountBalance = 100;
+        $this->cannotUpdateUser('wallet', $oldAccountBalance, $newAccountBalance);
+    }
 
     private function canUpdateUser($target, $old, $new)
     {
+        // Change to a spend management
+        // admin/parent can spend money for child
+        // child can spend money for themselves
+        // can not spend more than would take below $0
+        // What about undo spend? Does this need parent permission
+        // Probably not, a record of what has been spent needs to be kept
+        // An undo can just be reversing spend and saved amount is put back in
+        // Really seems like I will need an audit for this
+        // How do I save the amount spent
         $response = $this->put('/api/user/update', [$target => $new]);
 
         $response->assertStatus(200);
@@ -63,42 +143,13 @@ class UpdateUserTest extends APITestCase
         $this->assertNotEquals($old, $new);
     }
 
-
     public function cannotUpdateUser($target, $old, $new)
     {
         $response = $this->put('/api/user/update', [$target => $new]);
-        $error = $response['error'];
 
-        $response->assertStatus(200);
-        $this->assertEquals("Only a parent has access to change this", $error);
-    }
+        $errorMessage = $response->exception->getMessage();
 
-    private function canGetUser()
-    {
-        $user = $this->authUser;
-
-        $response = $this->get("/api/user/{$user->id}");
-
-        $response->assertStatus(200);
-        $response->assertJsonPath('name', $user->name);
-        $response->assertJsonPath('api_token', $user->api_token);
-    }
-
-    private function canGetAllUsers()
-    {
-        User::factory()->count(3)->create();
-        $users = User::all();
-
-        $userNames = collect($users)->map(function ($user) {
-            return $user->name;
-        });
-
-        $response = $this->get("/api/users");
-        $responseUserNames = $response->baseResponse->original->map(function ($user) {
-            return $user->name;
-        });
-
-        $response->assertStatus(200);
-        $this->assertEquals($userNames, $responseUserNames);
+        $response->assertStatus(403);
+        $this->assertEquals('You do not have access', $errorMessage);
     }
 }

@@ -2,10 +2,8 @@
 
 namespace Tests\Feature\UserChoreTests;
 
-use App\Data\Enums\ChoreApprovalStatuses;
 use App\Models\Chore;
 use App\Models\User;
-use App\Models\UserChore;
 use Tests\APITestCase;
 
 
@@ -39,7 +37,7 @@ class GetAllChoreUsersTest extends APITestCase
     public function child_user_can_get_all_users_of_chore()
     {
         $this->initChildUser();
-        $this->getChoreUsers();
+        $this->getChoreUsers('self');
     }
 
     /** @test */
@@ -49,10 +47,10 @@ class GetAllChoreUsersTest extends APITestCase
         $this->cannotGetChoreUsers();
     }
 
-    private function getChoreUsers()
+    private function getChoreUsers($target = null)
     {
         $userChores = $this->createChoreWithMultipleUsers($this->users, $this->chore);
-        $response = $this->get("/api/user-chore/get-chore-users/{$this->chore->id}");
+        $response = $this->get("/api/get-chore-users/{$this->chore->id}");
 
         $userChoreIds = [];
         $responseUserChoreIds = [];
@@ -80,7 +78,7 @@ class GetAllChoreUsersTest extends APITestCase
     private function cannotGetChoreUsers()
     {
         $this->createChoreWithMultipleUsers($this->users, $this->chore);
-        $response = $this->get("/api/user-chore/get-chore-users/{$this->chore->id}");
+        $response = $this->get("/api/get-chore-users/{$this->chore->id}");
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);

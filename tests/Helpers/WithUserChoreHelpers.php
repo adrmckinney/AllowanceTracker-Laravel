@@ -2,6 +2,7 @@
 
 namespace Tests\Helpers;
 
+use App\Models\User;
 use App\Models\UserChore;
 
 /**
@@ -15,6 +16,16 @@ trait WithUserChoreHelpers
         $userChore = UserChore::factory()->create([
             'user_id' => $this->authUser->id,
             'chore_id' => $this->chore->id
+        ]);
+
+        return $userChore;
+    }
+
+    public function createUserChoreForDifferentUser($user, $chore)
+    {
+        $userChore = UserChore::factory()->create([
+            'user_id' => $user->id,
+            'chore_id' => $chore->id
         ]);
 
         return $userChore;

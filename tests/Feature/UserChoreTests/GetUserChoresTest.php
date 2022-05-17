@@ -2,20 +2,20 @@
 
 namespace Tests\Feature\UserChoreTests;
 
-use App\Data\Enums\ChoreApprovalStatuses;
 use App\Models\Chore;
-use App\Models\UserChore;
+use App\Models\User;
 use Tests\APITestCase;
 
 
 class GetUserChoresTest extends APITestCase
 {
-    protected $chores;
+    protected $user, $chore;
 
     public function setUp(): void
     {
         parent::setUp();
 
+        $this->user = User::factory()->create();
         $this->chores = Chore::factory()->count(3)->create();
     }
 
@@ -37,7 +37,7 @@ class GetUserChoresTest extends APITestCase
     public function child_user_can_get_user_chores()
     {
         $this->initChildUser();
-        $this->getUserChores();
+        $this->getUserChores('self');
     }
 
     /** @test */
@@ -47,10 +47,16 @@ class GetUserChoresTest extends APITestCase
         $this->cannotGetUserChores();
     }
 
-    private function getUserChores()
+    private function getUserChores($target = null)
     {
-        $userChores = $this->createChoresWithSameUser($this->authUser, $this->chores);
-        $response = $this->get("/api/user-chore/get-user-chores/{$this->authUser->id}");
+        if ($target === 'self') {
+            $userChores = $this->createChoresWithSameUser($this->authUser, $this->chores);
+            $response = $this->get("/api/get-user-chores/{$this->authUser->id}");
+        } else {
+            $userChores = $this->createChoresWithSameUser($this->user, $this->chores);
+            $response = $this->get("/api/get-user-chores/{$this->user->id}");
+        }
+
 
         $userChoreIds = [];
         $responseUserChoreIds = [];
@@ -77,8 +83,9 @@ class GetUserChoresTest extends APITestCase
 
     private function cannotGetUserChores()
     {
-        $this->createChoresWithSameUser($this->authUser, $this->chores);
-        $response = $this->get("/api/user-chore/get-user-chores/{$this->authUser->id}");
+        $userChores = $this->createChoresWithSameUser($this->user, $this->chores);
+        $response = $this->get("/api/get-user-chores/{$this->user->id}");
+
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);

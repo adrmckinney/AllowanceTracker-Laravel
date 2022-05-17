@@ -44,8 +44,8 @@ Route::post('/chore', [ChoreController::class, 'createChore'])->middleware('auth
 Route::put('/chore', [ChoreController::class, 'updateChore'])->middleware('auth');
 
 Route::get('/user-chore/get/{id}', [UserChoreController::class, 'getUserChore'])->middleware('auth');
-Route::get('/user-chore/get-user-chores/{id}', [UserChoreController::class, 'getUserChores'])->middleware('auth');
-Route::get('/user-chore/get-chore-users/{id}', [UserChoreController::class, 'getChoreUsers'])->middleware('auth');
+Route::get("/get-user-chores/{id}", [UserChoreController::class, 'getUserChores'])->middleware('auth');
+Route::get("/get-chore-users/{id}", [UserChoreController::class, 'getChoreUsers'])->middleware('auth');
 Route::post('/user-chore/add', [UserChoreController::class, 'addChoreToUser'])->middleware('auth');
 Route::put('/user-chore/request-approval', [UserChoreController::class, 'requestApproval'])->middleware('auth');
 Route::put('/user-chore/approve-work', [UserChoreController::class, 'approveWork'])->middleware('auth');

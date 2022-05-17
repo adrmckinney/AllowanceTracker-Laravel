@@ -21,33 +21,38 @@ class UserPolicy extends AbstractPolicy
     }
 
     /**
-     * Determine if user can be fetched user data.
+     * Determine if user can fetched user data.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User
      * @return bool
      */
-    public function update(User $user, User $routeUser)
+    public function viewAll(User $user)
     {
         $permissionId = $user->permissions->toArray()[0]['permission_id'];
         return $this->isParent($permissionId);
     }
 
-    public function viewDashboard(User $user)
+    /**
+     * Determine if user can update user data.
+     *
+     * @param  \App\Models\User
+     * @return bool
+     */
+    public function update(User $user)
     {
-        return $user->isPurchaserToAnyOffice() || $user->isOrgPurchaserOrHigher();
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+        return $this->isChildOrHigher($permissionId);
     }
 
-    public function userAdmin(User $authUser, $args)
+    /**
+     * Determine if user can update user wallet.
+     *
+     * @param  \App\Models\User
+     * @return bool
+     */
+    public function updateWallet(User $user)
     {
-        $userId = get_array_key('id', $args) ?? get_array_key('user_id', $args);
-        $user = User::find($userId);
-
-        return $authUser->organization_id == $user->organization->id &&
-            ($authUser->id == $userId || $authUser->isAdminToUser($userId));
-    }
-
-    public function adminOffices(User $user)
-    {
-        return $user->isOrganizationAdmin() || $user->isAdminToAnyOffice();
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+        return $this->isParent($permissionId);
     }
 }

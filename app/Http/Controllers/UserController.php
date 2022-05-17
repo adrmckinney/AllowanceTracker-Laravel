@@ -2,15 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Data\Enums\PermissionTypes;
 use App\Models\User;
+use App\Models\UsersPermissions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
+    protected $userPermissionController;
+
+    public function __construct(UserPermissionController $userPermissionController)
+    {
+        $this->userPermissionController = $userPermissionController;
+    }
+
     public function getUser($id)
     {
-        return $this->getUserById($id);
+        $user = $this->getUserById($id);
+
+        $userPermission = $this->userPermissionController->getUserPermissionByUserId($user->id);
+        $user['user_permission'] = $userPermission->permission_id;
+
+        return $user;
     }
 
     public function usernameExists($username)
@@ -23,23 +37,58 @@ class UserController extends Controller
         return User::where('email', '=', $email)->first();
     }
 
-    public function getUsers()
+    public function getUsers(Request $request)
     {
-        return User::all();
+        $user = $request->user();
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+
+        switch ($permissionId) {
+            case PermissionTypes::$ADMIN:
+                $users = User::where('id', '!=', $user->id)->get();
+                $this->addPermissionToUserData($users);
+
+                return $users;
+
+            case PermissionTypes::$PARENT:
+                $users = User::where('id', '!=', $user->id)->get();
+                $this->addPermissionToUserData($users);
+
+                $filteredUsers = $users->filter(function ($user) {
+                    return $user->user_permission !== PermissionTypes::$ADMIN;
+                });
+
+                return collect(array_values(array_filter($filteredUsers->toArray())));
+
+            case PermissionTypes::$CHILD:
+            case PermissionTypes::$NO_ACCESS:
+                if ($request->user()->cannot('viewAll', $user)) {
+                    abort(403, 'You do not have access to get users');
+                };
+        }
     }
 
     public function update(Request $request)
     {
         $fields = ['name', 'email', 'username', 'wallet', 'password', 'permissions'];
 
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = $request->user();
 
-        // if ($request->user()->cannot('update', $user)) {
-        //     abort(403, 'You do not have access to this user');
-        // };
+        if ($request->user()->cannot('update', $user)) {
+            abort(403, 'You do not have access');
+        };
+
+
+        if ($request->user()->cannot('update', $user)) {
+            abort(403, 'You do not have access');
+        };
 
         foreach ($fields as $field) {
+            if (array_keys($request->toArray())[0] === 'wallet') {
+                if ($request->user()->cannot('updateWallet', $user)) {
+                    abort(403, 'You do not have access');
+                };
+            }
+
             if ($request->$field) {
                 $user->$field = $request->$field;
                 $user->save();
@@ -61,5 +110,17 @@ class UserController extends Controller
     public static function getUserByUsername($username)
     {
         return User::where('username', '=', $username);
+    }
+
+    public function addPermissionToUserData($users)
+    {
+        $users->map(function ($user) {
+            $userPermission = $this->userPermissionController->getUserPermissionByUserId($user->id);
+            $user['user_permission'] = $userPermission->permission_id;
+
+            return $user;
+        });
+
+        return $users;
     }
 }

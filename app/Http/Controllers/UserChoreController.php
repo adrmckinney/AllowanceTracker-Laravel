@@ -3,46 +3,62 @@
 namespace App\Http\Controllers;
 
 use App\Data\Enums\UserChoreApprovalStatuses;
+use App\Data\Traits\UserTrait;
 use App\Models\UserChore;
 use Illuminate\Http\Request;
 
 class UserChoreController extends Controller
 {
+    use UserTrait;
+
+    protected $choreController, $userController;
+
+    public function __construct(ChoreController $choreController, UserController $userController)
+    {
+        $this->choreController = $choreController;
+        $this->userController = $userController;
+    }
+
     public function getUserChore(Request $request)
     {
-        $userChore = $this->getUserChoreById($request->id);
-
-        if ($request->user()->cannot('getOne', $userChore)) {
+        if ($request->user()->cannot('getOne', UserChore::class)) {
             abort(403, 'You do not have access to get this chore');
         }
+
+        $userChore = $this->getUserChoreById($request->id);
+
 
         return $userChore;
     }
 
-    public function getUserChores(Request $request)
+    public function getUserChores(Request $request, $userIdOfChores)
     {
-        $userChores = $this->getChoresOfUser($request->id);
-
-        if ($request->user()->cannot('getMany', $userChores[0])) {
+        if ($request->user()->cannot('getMany', UserChore::class)) {
             abort(403, 'You do not have access to get chores');
         }
+
+        $userChores = $this->getChoresOfUser($userIdOfChores);
 
         return $userChores;
     }
 
-    public function getChoreUsers(Request $request)
+    public function getChoreUsers(Request $request, $choreId)
     {
-        $userChores = $this->getChoresByUserId($request->id);
-
-        if ($request->user()->cannot('getMany', $userChores[0])) {
+        if ($request->user()->cannot('getMany', UserChore::class)) {
             abort(403, 'You do not have access to get chores');
         }
+
+        $userChores = $this->getChoresByUserId($choreId);
 
         return $userChores;
     }
 
     public function addChoreToUser(Request $request)
     {
+        if ($request->user()->cannot('add', UserChore::class)) {
+            abort(403, 'You do not have access to be added to this chore');
+        }
+
         $newUserChore = UserChore::create([
             'user_id' => $request['user_id'],
             'chore_id' => $request['chore_id'],
@@ -52,21 +68,15 @@ class UserChoreController extends Controller
             'approval_date' => NULL,
         ]);
 
-        $userChore = $this->getUserChoreById($newUserChore->id);
-
-        if ($request->user()->cannot('add', $userChore)) {
-            abort(403, 'You do not have access to be added to this chore');
-        }
-
         return $newUserChore;
     }
 
     public function removeChoreFromUser(Request $request)
     {
-        $userChore = $this->getUserChoreById($request->id);
-        if ($request->user()->cannot('remove', $userChore)) {
+        if ($request->user()->cannot('remove', UserChore::class)) {
             abort(403, 'You do not have access to remove to this chore');
         }
+        $userChore = $this->getUserChoreById($request->id);
         $userChore->delete();
 
         return $userChore;
@@ -74,12 +84,10 @@ class UserChoreController extends Controller
 
     public function requestApproval(Request $request)
     {
-        $userChore = $this->getUserChoreById($request->id);
-
-        if ($request->user()->cannot('requestApproval', $userChore)) {
+        if ($request->user()->cannot('requestApproval', UserChore::class)) {
             abort(403, 'You do not have access to request approval');
         }
-
+        $userChore = $this->getUserChoreById($request->id);
         $userChore = $this->handleApprovalRequest($userChore, $request);
 
         $userChore->save();
@@ -89,13 +97,12 @@ class UserChoreController extends Controller
 
     public function approveWork(Request $request)
     {
-        $userChore = $this->getUserChoreById($request->id);
         $statusName = UserChoreApprovalStatuses::getStatusName($request->approval_status);
-
-        if ($request->user()->cannot('approveWork', $userChore)) {
+        if ($request->user()->cannot('approveWork', UserChore::class)) {
             abort(403, "You do not have access to {$statusName} work");
         }
 
+        $userChore = $this->getUserChoreById($request->id);
         $userChore = $this->handleApproval($userChore, $request);
 
         $userChore->save();
@@ -134,11 +141,17 @@ class UserChoreController extends Controller
 
     public function handleApproval($userChore, $request)
     {
+        $user = $this->findUser($userChore->user_id);
+        $userChoreCurrentStatus = $userChore->approval_status;
+        $choreCost = $this->findChoreCost($userChore->chore_id);
+
         switch ($request->approval_status) {
             case UserChoreApprovalStatuses::$APPROVED:
                 $userChore['approval_status'] = UserChoreApprovalStatuses::$APPROVED;
                 $userChore['approval_date'] = date('Y-m-d H:i:s', time());
                 $userChore['rejected_date'] = NULL;
+
+                $this->addMoneyToWallet($user, $choreCost);
 
                 return $userChore;
 
@@ -147,12 +160,20 @@ class UserChoreController extends Controller
                 $userChore['approval_date'] = NULL;
                 $userChore['rejected_date'] = date('Y-m-d H:i:s', time());
 
+                if ($userChoreCurrentStatus === UserChoreApprovalStatuses::$APPROVED) {
+                    $this->removeMoneyFromWallet($user, $choreCost);
+                }
+
                 return $userChore;
 
             case UserChoreApprovalStatuses::$PENDING:
                 $userChore['approval_status'] = UserChoreApprovalStatuses::$PENDING;
                 $userChore['approval_date'] = NULL;
                 $userChore['rejected_date'] = NULL;
+
+                if ($userChoreCurrentStatus === UserChoreApprovalStatuses::$APPROVED) {
+                    $this->removeMoneyFromWallet($user, $choreCost);
+                }
 
                 return $userChore;
 
@@ -161,5 +182,15 @@ class UserChoreController extends Controller
         }
 
         return $userChore;
+    }
+
+    public function findUser($userId)
+    {
+        return $this->userController->getUserById($userId);
+    }
+
+    public function findChoreCost($choreId)
+    {
+        return $this->choreController->getChoreById($choreId)->cost;
     }
 }

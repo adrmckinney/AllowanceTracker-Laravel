@@ -102,10 +102,4 @@ trait UserPermissionsTrait
             && $userPermissions->count() === 0;
         return false;
     }
-
-
-    // public function isOrganizationPurchaser(): bool
-    // {
-    //     return $this->hasPermission('organization-purchaser');
-    // }
 }
