@@ -2,21 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Data\Enums\TransactionTypes;
 use App\Data\Enums\UserChoreApprovalStatuses;
 use App\Data\Traits\UserTrait;
 use App\Models\UserChore;
+use App\Types\Transactions\TransactionType;
+use Illuminate\Database\Events\TransactionCommitted;
 use Illuminate\Http\Request;
 
 class UserChoreController extends Controller
 {
     use UserTrait;
 
-    protected $choreController, $userController;
+    protected $choreController, $userController, $transactionController;
 
-    public function __construct(ChoreController $choreController, UserController $userController)
-    {
+    public function __construct(
+        ChoreController $choreController,
+        UserController $userController,
+        TransactionController $transactionController
+    ) {
         $this->choreController = $choreController;
         $this->userController = $userController;
+        $this->transactionController = $transactionController;
     }
 
     public function getUserChore(Request $request)
@@ -151,6 +158,13 @@ class UserChoreController extends Controller
                 $userChore['approval_date'] = date('Y-m-d H:i:s', time());
                 $userChore['rejected_date'] = NULL;
 
+                $transaction = new TransactionType([
+                    'user_id' => $userChore->user_id,
+                    'chore_id' => $userChore->chore_id,
+                    'transaction_amount' => $choreCost,
+                    'transaction_type' => TransactionTypes::$DEPOSIT
+                ]);
+                $this->transactionController->createTransaction($transaction);
                 $this->addMoneyToWallet($user, $choreCost);
 
                 return $userChore;

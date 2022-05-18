@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Models\Chore;
 use App\Models\Permission;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserChore;
 use App\Models\UsersPermissions;
 use App\Policies\ChorePolicy;
 use App\Policies\PermissionPolicy;
+use App\Policies\TransactionPolicy;
 use App\Policies\UserChorePolicy;
 use App\Policies\UserPermissionPolicy;
 use App\Policies\UserPolicy;
@@ -28,7 +30,8 @@ class AuthServiceProvider extends ServiceProvider
         Permission::class => PermissionPolicy::class,
         Chore::class => ChorePolicy::class,
         UserChore::class => UserChorePolicy::class,
-        UsersPermissions::class => UserPermissionPolicy::class
+        UsersPermissions::class => UserPermissionPolicy::class,
+        Transaction::class => TransactionPolicy::class
     ];
 
     /**

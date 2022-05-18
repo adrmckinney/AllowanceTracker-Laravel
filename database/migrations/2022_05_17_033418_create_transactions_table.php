@@ -29,6 +29,7 @@ return new class extends Migration
                 ->on('chores')
                 ->onDelete('cascade');
 
+            $table->integer('transaction_amount')->default(0);
             $table->unsignedInteger('transaction_type');
             $table->timestamps();
         });

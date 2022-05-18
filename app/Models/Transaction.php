@@ -10,6 +10,9 @@ class Transaction extends Model
 {
     use HasFactory;
 
+    protected $guarded = ['id', 'created_at', 'updated_at'];
+    public $timestamps = true;
+
     public function users(): MorphToMany
     {
         return $this->morphedByMany(User::class, 'transactionable');
