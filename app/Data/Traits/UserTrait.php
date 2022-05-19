@@ -2,6 +2,7 @@
 
 namespace App\Data\Traits;
 
+use App\Http\Controllers\UserController;
 use App\Models\Permission;
 use App\Models\UsersPermissions;
 use Exception;

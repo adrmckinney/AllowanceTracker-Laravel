@@ -9,6 +9,7 @@ use App\Http\Controllers\LogoutController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserChoreController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserPermissionController;
@@ -58,6 +59,10 @@ Route::put('/permission/update', [PermissionsController::class, 'updatePermissio
 
 Route::post('/user-permission/add', [UserPermissionController::class, 'addPermission'])->middleware('auth');
 Route::put('/user-permission/update', [UserPermissionController::class, 'updatePermission'])->middleware('auth');
+
+Route::get('/transaction/{id}', [TransactionController::class, 'getTransaction'])->middleware('auth');
+Route::get('/transactions', [TransactionController::class, 'getTransactionsList'])->middleware('auth');
+Route::post('/transaction/spend', [TransactionController::class, 'spendTransaction'])->middleware('auth');
 
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {

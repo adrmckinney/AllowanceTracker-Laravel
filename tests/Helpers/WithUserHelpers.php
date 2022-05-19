@@ -2,8 +2,10 @@
 
 namespace Tests\Helpers;
 
+use App\Data\Enums\PermissionTypes;
 use App\Models\Permission;
 use App\Models\User;
+use App\Models\UsersPermissions;
 
 /**
  * Trait WithUserHelpers
@@ -76,6 +78,16 @@ trait WithUserHelpers
         Permission::factory()->create([
             'name' => 'child',
             'display_name' => 'Child',
+        ]);
+    }
+
+    public function createChildUser()
+    {
+        $this->createPermissions();
+        $user = User::factory()->create();
+        return UsersPermissions::factory()->create([
+            'user_id' => $user->id,
+            'permission_id' => PermissionTypes::$CHILD
         ]);
     }
 }

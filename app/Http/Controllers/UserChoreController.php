@@ -7,6 +7,7 @@ use App\Data\Enums\UserChoreApprovalStatuses;
 use App\Data\Traits\UserTrait;
 use App\Models\UserChore;
 use App\Types\Transactions\TransactionType;
+use App\Types\UserChoreType;
 use Illuminate\Database\Events\TransactionCommitted;
 use Illuminate\Http\Request;
 
@@ -66,7 +67,7 @@ class UserChoreController extends Controller
             abort(403, 'You do not have access to be added to this chore');
         }
 
-        $newUserChore = UserChore::create([
+        $createChore = new UserChoreType([
             'user_id' => $request['user_id'],
             'chore_id' => $request['chore_id'],
             'approval_requested' => false,
@@ -75,7 +76,7 @@ class UserChoreController extends Controller
             'approval_date' => NULL,
         ]);
 
-        return $newUserChore;
+        return UserChore::create($createChore->toCreateArray());
     }
 
     public function removeChoreFromUser(Request $request)
@@ -148,7 +149,6 @@ class UserChoreController extends Controller
 
     public function handleApproval($userChore, $request)
     {
-        $user = $this->findUser($userChore->user_id);
         $userChoreCurrentStatus = $userChore->approval_status;
         $choreCost = $this->findChoreCost($userChore->chore_id);
 
@@ -165,7 +165,6 @@ class UserChoreController extends Controller
                     'transaction_type' => TransactionTypes::$DEPOSIT
                 ]);
                 $this->transactionController->createTransaction($transaction);
-                $this->addMoneyToWallet($user, $choreCost);
 
                 return $userChore;
 
@@ -175,7 +174,13 @@ class UserChoreController extends Controller
                 $userChore['rejected_date'] = date('Y-m-d H:i:s', time());
 
                 if ($userChoreCurrentStatus === UserChoreApprovalStatuses::$APPROVED) {
-                    $this->removeMoneyFromWallet($user, $choreCost);
+                    $transaction = new TransactionType([
+                        'user_id' => $userChore->user_id,
+                        'chore_id' => $userChore->chore_id,
+                        'transaction_amount' => $choreCost,
+                        'transaction_type' => TransactionTypes::$WITHDRAW
+                    ]);
+                    $this->transactionController->createTransaction($transaction);
                 }
 
                 return $userChore;
@@ -186,7 +191,13 @@ class UserChoreController extends Controller
                 $userChore['rejected_date'] = NULL;
 
                 if ($userChoreCurrentStatus === UserChoreApprovalStatuses::$APPROVED) {
-                    $this->removeMoneyFromWallet($user, $choreCost);
+                    $transaction = new TransactionType([
+                        'user_id' => $userChore->user_id,
+                        'chore_id' => $userChore->chore_id,
+                        'transaction_amount' => $choreCost,
+                        'transaction_type' => TransactionTypes::$WITHDRAW
+                    ]);
+                    $this->transactionController->createTransaction($transaction);
                 }
 
                 return $userChore;

@@ -22,7 +22,7 @@ return new class extends Migration
                 ->on('users')
                 ->onDelete('cascade');
 
-            $table->unsignedBigInteger('chore_id');
+            $table->unsignedBigInteger('chore_id')->nullable();
             $table
                 ->foreign('chore_id')
                 ->references('id')

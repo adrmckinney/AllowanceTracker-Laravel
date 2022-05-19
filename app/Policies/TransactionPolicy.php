@@ -11,7 +11,30 @@ class TransactionPolicy extends AbstractPolicy
 
 
     /**
-     * Determine if all permissions can be fetched by the user.
+     *
+     * @param  \App\Models\User  $user
+     * @return bool
+     */
+    public function viewOne(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+
+        return $this->isChildOrHigher($permissionId);
+    }
+
+    /**
+     *
+     * @param  \App\Models\User  $user
+     * @return bool
+     */
+    public function viewMany(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+
+        return $this->isChildOrHigher($permissionId);
+    }
+
+    /**
      *
      * @param  \App\Models\User  $user
      * @return bool
@@ -24,9 +47,20 @@ class TransactionPolicy extends AbstractPolicy
     }
 
     /**
-     * Determine if all permissions can be fetched by the user.
      *
      * @param  \App\Models\User  $user
+     * @return bool
+     */
+    public function spend(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+
+        return $this->isChildOrHigher($permissionId);
+    }
+
+    /**
+     *
+     * @param  \App\Models\User $user
      * @return bool
      */
     public function update(User $user)
@@ -37,9 +71,8 @@ class TransactionPolicy extends AbstractPolicy
     }
 
     /**
-     * Determine if all permissions can be fetched by the user.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User $user
      * @return bool
      */
     public function getMany(User $user)

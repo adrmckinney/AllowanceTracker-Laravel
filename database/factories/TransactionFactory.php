@@ -22,7 +22,7 @@ class TransactionFactory extends Factory
         return [
             'user_id' => User::factory(),
             'chore_id' => Chore::factory(),
-            'transaction_amount' => 0,
+            'transaction_amount' => 1000,
             'transaction_type' => TransactionTypes::$WITHDRAW,
         ];
     }
