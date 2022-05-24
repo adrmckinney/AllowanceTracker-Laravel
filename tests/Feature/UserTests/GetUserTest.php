@@ -37,19 +37,15 @@ class GetUserTest extends APITestCase
         $this->canGetUser();
     }
 
-    // /** @test */
-    // public function can_get_all_users()
-    // {
-    //     $this->initTestUser();
-    //     $this->canGetAllUsers();
-    // }
-
     private function canGetUser()
     {
         $user = $this->authUser;
-        $permissionId = $this->authUser->permissions->toArray()[0]['permission_id'];
 
-        $response = $this->get("/api/user/{$user->id}");
+        $permissionId = $this->authUser->permissions->toArray()[0]['permission_id'];
+        $response = $this->get("/api/user/{$user->id}", [
+            'Authorization' => "Bearer {$user->api_token}",
+            'Accept' => 'application/json',
+        ]);
 
         $response->assertStatus(200);
         $response->assertJsonPath('name', $user->name);

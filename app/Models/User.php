@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Data\Traits\UserAuthorizableTrait;
 use App\Data\Traits\UserPermissionsTrait;
 use App\Types\Users\UserType;
+use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,7 +20,8 @@ class User extends Authenticatable
         HasApiTokens,
         HasFactory,
         Notifiable,
-        UserPermissionsTrait;
+        UserPermissionsTrait,
+        CanResetPassword;
 
     public $timestamps = true;
     protected $guarded = ['id', 'created_at', 'updated_at'];
@@ -55,11 +57,6 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-
-    // public function chores(): HasMany
-    // {
-    //     return $this->hasMany(Chore::class, 'user_id');
-    // }
 
     public function permissions(): HasMany
     {

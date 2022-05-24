@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Data\Enums\PermissionTypes;
 use App\Models\User;
 use App\Models\UsersPermissions;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +18,7 @@ class UserController extends Controller
         $this->userPermissionController = $userPermissionController;
     }
 
-    public function getUser($id)
+    public function getUser(Request $request, $id)
     {
         $user = $this->getUserById($id);
 

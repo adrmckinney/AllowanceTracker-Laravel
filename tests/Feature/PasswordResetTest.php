@@ -12,18 +12,39 @@ use Illuminate\Support\Str;
 
 class PasswordResetTest extends APITestCase
 {
-    const ROUTE_PASSWORD_EMAIL = 'password.email';
-    const ROUTE_PASSWORD_REQUEST = 'password.request';
-    const ROUTE_PASSWORD_RESET = 'password.reset';
-    const ROUTE_PASSWORD_RESET_SUBMIT = 'password.reset.submit';
+    // /** @test */
+    // public function admin_user_can_reset_password()
+    // {
+    //     $this->initAdminUser();
+    //     $this->canResetPassword();
+    // }
 
-    const USER_ORIGINAL_PASSWORD = 'secret';
+    // /** @test */
+    // public function parent_user_can_reset_password()
+    // {
+    //     $this->initParentUser();
+    //     $this->canResetPassword();
+    // }
+
+    // /** @test */
+    // public function child_user_can_reset_password()
+    // {
+    //     $this->initChildUser();
+    //     $this->canResetPassword();
+    // }
+
+    // /** @test */
+    // public function parent_user_cannot_reset_password_with_invalid_email()
+    // {
+    //     $this->initParentUser();
+    //     $this->cannotResetPasswordWithInvalidEmail();
+    // }
 
     /** @test */
-    public function admin_user_can_reset_password()
+    public function parent_user_cannot_reset_password_with_invalid_password()
     {
-        $this->initAdminUser();
-        $this->canResetPassword();
+        $this->initParentUser();
+        $this->cannotResetPasswordWithInvalidPassword();
     }
 
     public function canResetPassword()
@@ -36,7 +57,41 @@ class PasswordResetTest extends APITestCase
             'api_token' => $this->authUser->api_token,
         ]);
 
-        // $this->echoResponse($response);
+        $response->assertStatus(200)
+            ->assertJsonPath('api_token', $this->authUser->api_token);
+        $this->assertNotEquals($this->authUser->password, $response->baseResponse->original->password);
+    }
+
+    public function cannotResetPasswordWithInvalidEmail()
+    {
+        $response = $this->post('/api/password/reset', [
+            'id' => $this->authUser->id,
+            'email' => $this->faker->safeEmail(),
+            'password' => 'aNewPassword1',
+            'password_confirmation' => 'aNewPassword1',
+            'api_token' => $this->authUser->api_token,
+        ]);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(422);
+        $this->assertEquals('The email you provided is not correct', $errorMessage);
+    }
+
+    public function cannotResetPasswordWithInvalidPassword()
+    {
+        $response = $this->post('/api/password/reset', [
+            'id' => $this->authUser->id,
+            'email' => $this->authUser->email,
+            'password' => 'anew',
+            'password_confirmation' => 'ane',
+            'api_token' => $this->authUser->api_token,
+        ]);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(403);
+        $this->assertEquals('The email you provided is not correct', $errorMessage);
     }
 
     // /** @test */

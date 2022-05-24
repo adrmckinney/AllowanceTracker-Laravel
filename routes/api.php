@@ -25,10 +25,6 @@ use App\Http\Controllers\UserPermissionController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
 Route::get('/logout', [LogoutController::class, 'logout']);
 
 Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm']);
@@ -64,6 +60,8 @@ Route::get('/transaction/{id}', [TransactionController::class, 'getTransaction']
 Route::get('/transactions', [TransactionController::class, 'getTransactionsList'])->middleware('auth');
 Route::post('/transaction/spend', [TransactionController::class, 'spendTransaction'])->middleware('auth');
 
+// Route::get('/login', [LoginController::class, 'show'])->name('login.show');
+// Route::post('/login', [LoginController::class, 'login'])->name('login.perform');
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {
     /**
