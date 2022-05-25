@@ -22,6 +22,10 @@ class UserController extends Controller
     {
         $user = $this->getUserById($id);
 
+        if ($request->user()->cannot('viewOne', $user)) {
+            abort(403, 'You do not have access to get this user info');
+        };
+
         $userPermission = $this->userPermissionController->getUserPermissionByUserId($user->id);
         $user['user_permission'] = $userPermission->permission_id;
 

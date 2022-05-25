@@ -53,6 +53,17 @@ trait WithUserHelpers
         $this->authUser->addPermission('no_access');
     }
 
+    protected function initNoTokenAccessUser()
+    {
+        $this->authUser = User::factory()->create();
+        $this->post('/api/login', [
+            'username' => $this->authUser->username,
+            'password' => 'password',
+        ]);
+        $this->authUser['api_token'] = null;
+        $this->authUser->save();
+    }
+
     protected function initTestUser()
     {
         $this->authUser = User::factory()->create();
@@ -89,5 +100,29 @@ trait WithUserHelpers
             'user_id' => $user->id,
             'permission_id' => PermissionTypes::$CHILD
         ]);
+    }
+
+    public function getHeaders()
+    {
+        return [
+            'Authorization' => "Bearer {$this->authUser->api_token}",
+            'Accept' => 'application/json',
+        ];
+    }
+
+    public function urlConfig($action, $baseUrl, $id = null, $input = null)
+    {
+        if ($input === null) {
+            return $this->$action(
+                "api/{$baseUrl}/{$id}",
+                $this->getHeaders(),
+            );
+        } else {
+            return $this->$action(
+                "api/{$baseUrl}/{$id}",
+                $input,
+                $this->getHeaders(),
+            );
+        }
     }
 }

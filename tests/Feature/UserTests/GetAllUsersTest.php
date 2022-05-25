@@ -58,10 +58,18 @@ class GetAllUserSTest extends APITestCase
         $this->cannotGetAllUsers();
     }
 
+    /** @test */
+    public function no_access_cannot_get_any_users_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotGetUsersWithoutToken();
+    }
+
     private function canGetAllUsers($count, $expectedPermissions)
     {
         $this->createUserPermissions();
-        $response = $this->get("/api/users");
+        $response = $this->urlConfig('get', 'users');
+
         $responsePermissions = $response->baseResponse->original->map(function ($resPermission) {
             return $resPermission['user_permission'];
         });
@@ -74,12 +82,24 @@ class GetAllUserSTest extends APITestCase
 
     public function cannotGetAllUsers()
     {
-        $response = $this->get("/api/users");
+        $response = $this->urlConfig('get', 'users');
 
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to get users', $errorMessage);
+    }
+
+    public function cannotGetUsersWithoutToken()
+    {
+        $user = $this->authUser;
+
+        $response = $this->urlConfig('get', 'users');
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 
     private function createUserPermissions()

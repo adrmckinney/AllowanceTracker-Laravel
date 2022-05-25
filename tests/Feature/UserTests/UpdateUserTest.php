@@ -125,6 +125,15 @@ class UpdateUserTest extends APITestCase
         $this->cannotUpdateUser('wallet', $oldAccountBalance, $newAccountBalance);
     }
 
+    /** @test */
+    public function no_access_user_cannot_update_name_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $oldName = $this->authUser->name;
+        $newName = $this->faker()->name();
+        $this->cannotGetUsersWithoutToken('name', $oldName, $newName);
+    }
+
     private function canUpdateUser($target, $old, $new)
     {
         // Change to a spend management
@@ -136,7 +145,8 @@ class UpdateUserTest extends APITestCase
         // An undo can just be reversing spend and saved amount is put back in
         // Really seems like I will need an audit for this
         // How do I save the amount spent
-        $response = $this->put('/api/user/update', [$target => $new]);
+
+        $response = $this->urlConfig('put', 'user/update', null, [$target => $new]);
 
         $response->assertStatus(200);
         $response->assertJsonPath($target, $new);
@@ -145,11 +155,23 @@ class UpdateUserTest extends APITestCase
 
     public function cannotUpdateUser($target, $old, $new)
     {
-        $response = $this->put('/api/user/update', [$target => $new]);
+        $response = $this->urlConfig('put', 'user/update', null, [$target => $new]);
 
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access', $errorMessage);
+    }
+
+    public function cannotGetUsersWithoutToken($target, $old, $new)
+    {
+        $user = $this->authUser;
+
+        $response = $this->urlConfig('put', 'user/update', null, [$target => $new]);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

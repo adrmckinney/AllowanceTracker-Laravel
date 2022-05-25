@@ -8,7 +8,6 @@ use Tests\APITestCase;
 
 class GetUserTest extends APITestCase
 {
-
     /** @test */
     public function admin_can_get_user_by_id()
     {
@@ -31,10 +30,17 @@ class GetUserTest extends APITestCase
     }
 
     /** @test */
-    public function no_access_can_get_user_by_id()
+    public function no_access_cannot_get_user_by_id()
     {
         $this->initNoAccessUser();
-        $this->canGetUser();
+        $this->cannotGetUser();
+    }
+
+    /** @test */
+    public function no_access_cannot_get_user_by_id_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotGetUserWithoutToken();
     }
 
     private function canGetUser()
@@ -42,10 +48,7 @@ class GetUserTest extends APITestCase
         $user = $this->authUser;
 
         $permissionId = $this->authUser->permissions->toArray()[0]['permission_id'];
-        $response = $this->get("/api/user/{$user->id}", [
-            'Authorization' => "Bearer {$user->api_token}",
-            'Accept' => 'application/json',
-        ]);
+        $response = $this->urlConfig('get', 'user', $user->id);
 
         $response->assertStatus(200);
         $response->assertJsonPath('name', $user->name);
@@ -56,11 +59,23 @@ class GetUserTest extends APITestCase
     public function cannotGetUser()
     {
         $user = $this->authUser;
-        $response = $this->get("/api/user/{$user->id}");
+        $response = $this->urlConfig('get', 'user', $user->id);
 
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
-        $this->assertEquals('You do not have access', $errorMessage);
+        $this->assertEquals('You do not have access to get this user info', $errorMessage);
+    }
+
+    public function cannotGetUserWithoutToken()
+    {
+        $user = $this->authUser;
+
+        $response = $this->urlConfig('get', 'user', $user->id);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

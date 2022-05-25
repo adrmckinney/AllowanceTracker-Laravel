@@ -2,12 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Data\Enums\ChoreApprovalStatuses;
 use App\Models\Chore;
 use Illuminate\Http\Request;
 
 class ChoreController extends Controller
 {
+    public function getChore(Request $request, $id)
+    {
+        if ($request->user()->cannot('getOne', Chore::class)) {
+            abort(403, 'You do not have access to get this chore');
+        }
+
+        return $this->getChoreById($id);
+    }
+
+    public function getChoreList(Request $request)
+    {
+        if ($request->user()->cannot('getMany', Chore::class)) {
+            abort(403, 'You do not have access to get chores');
+        }
+
+        return Chore::all();
+    }
+
     public function createChore(Request $request)
     {
 

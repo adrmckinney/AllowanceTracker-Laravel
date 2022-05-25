@@ -11,9 +11,32 @@ class ChorePolicy extends AbstractPolicy
     use HandlesAuthorization;
 
     /**
-     * Determine if the given permission can be updated by the user.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User
+     * @return bool
+     */
+    public function getOne(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+
+        return $this->isChildOrHigher($permissionId);
+    }
+
+    /**
+     *
+     * @param  \App\Models\User
+     * @return bool
+     */
+    public function getMany(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+
+        return $this->isChildOrHigher($permissionId);
+    }
+
+    /**
+     *
+     * @param  \App\Models\User
      * @return bool
      */
     public function create(User $user)
@@ -24,9 +47,8 @@ class ChorePolicy extends AbstractPolicy
     }
 
     /**
-     * Determine if the given permission can be updated by the user.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User
      * @return bool
      */
     public function update(User $user)

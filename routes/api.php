@@ -37,6 +37,8 @@ Route::get('/user/{id}', [UserController::class, 'getUser'])->middleware('auth')
 Route::get('/users', [UserController::class, 'getUsers'])->middleware('auth');
 Route::put('/user/update', [UserController::class, 'update'])->middleware('auth');
 
+Route::get('/chore/{id}', [ChoreController::class, 'getChore'])->middleware('auth');
+Route::get('/chores', [ChoreController::class, 'getChoreList'])->middleware('auth');
 Route::post('/chore', [ChoreController::class, 'createChore'])->middleware('auth');
 Route::put('/chore', [ChoreController::class, 'updateChore'])->middleware('auth');
 

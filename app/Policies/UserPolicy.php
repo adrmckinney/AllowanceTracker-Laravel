@@ -15,9 +15,16 @@ class UserPolicy extends AbstractPolicy
         return true;
     }
 
-    public function admin()
+    /**
+     * Determine if user can fetched user data.
+     *
+     * @param  \App\Models\User
+     * @return bool
+     */
+    public function viewOne(User $user)
     {
-        return false;
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+        return $this->isChildOrHigher($permissionId);
     }
 
     /**
