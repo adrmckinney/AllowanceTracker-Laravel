@@ -57,4 +57,16 @@ class ChorePolicy extends AbstractPolicy
 
         return $this->isParent($permissionId);
     }
+
+    /**
+     *
+     * @param  \App\Models\User
+     * @return bool
+     */
+    public function delete(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+
+        return $this->isParent($permissionId);
+    }
 }

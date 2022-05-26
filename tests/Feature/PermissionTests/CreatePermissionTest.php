@@ -40,9 +40,16 @@ class CreatePermissionTest extends APITestCase
         $this->cannotCreatePermission();
     }
 
+    /** @test */
+    public function no_access_user_cannot_create_permission_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotCreatePermissionWithoutToken();
+    }
+
     private function createPermission()
     {
-        $response = $this->post('/api/permission/create', $this->input);
+        $response = $this->urlConfig('post', 'permission/create', $this->input);
 
         $response->assertStatus(201);
         $response->assertJsonPath('name', $this->input['name']);
@@ -50,10 +57,22 @@ class CreatePermissionTest extends APITestCase
 
     private function cannotCreatePermission()
     {
-        $response = $this->post('/api/permission/create', $this->input);
+        $response = $this->urlConfig('post', 'permission/create', $this->input);
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to create a permission', $errorMessage);
+    }
+
+    public function cannotCreatePermissionWithoutToken()
+    {
+        $user = $this->authUser;
+
+        $response = $this->urlConfig('post', 'permission/create', $this->input);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

@@ -105,16 +105,24 @@ class ApproveWorkTest extends APITestCase
         $this->walletCanBeNegativeTest();
     }
 
+    /** @test */
+    public function no_access_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->noAccessWithoutToken();
+    }
+
     private function canApproveWork()
     {
         $userChore = $this->createUserChoreForDifferentUser($this->user, $this->chore);
         $this->setupApprovalRequestWithPendingStatus($userChore);
         $userWalletBeforeApproval = $this->user->wallet;
 
-        $response = $this->put('/api/user-chore/approve-work', [
+        $response = $this->urlConfig('put', 'user/chore/approve', [
             'id' => $userChore->id,
             'approval_status' => UserChoreApprovalStatuses::$APPROVED
         ]);
+
         $this->user->refresh();
         $userWalletAfterApproval = $this->user->wallet;
 
@@ -136,10 +144,12 @@ class ApproveWorkTest extends APITestCase
     private function cannotApproveWork()
     {
         $userChore = $this->createUserChoreForDifferentUser($this->user, $this->chore);
-        $response = $this->put('/api/user-chore/approve-work', [
+
+        $response = $this->urlConfig('put', 'user/chore/approve', [
             'id' => $userChore->id,
             'approval_status' => UserChoreApprovalStatuses::$APPROVED
         ]);
+
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
@@ -152,10 +162,11 @@ class ApproveWorkTest extends APITestCase
         $this->setupApprovedRequest($userChore);
         $userWalletBeforeApproval = $this->user->wallet;
 
-        $response = $this->put('/api/user-chore/approve-work', [
+        $response = $this->urlConfig('put', 'user/chore/approve', [
             'id' => $userChore->id,
             'approval_status' => UserChoreApprovalStatuses::$PENDING
         ]);
+
         $this->user->refresh();
         $userWalletAfterApproval = $this->user->wallet;
 
@@ -175,7 +186,7 @@ class ApproveWorkTest extends APITestCase
         $this->setupApprovalRequestWithPendingStatus($userChore);
         $userWalletBeforeApproval = $this->user->wallet;
 
-        $response = $this->put('/api/user-chore/approve-work', [
+        $response = $this->urlConfig('put', 'user/chore/approve', [
             'id' => $userChore->id,
             'approval_status' => UserChoreApprovalStatuses::$REJECTED
         ]);
@@ -196,7 +207,7 @@ class ApproveWorkTest extends APITestCase
         $userChore = $this->createUserChoreForDifferentUser($this->user, $this->chore);
         $this->setupApprovalRequestWithPendingStatus($userChore);
 
-        $response = $this->put('/api/user-chore/approve-work', [
+        $response = $this->urlConfig('put', 'user/chore/approve', [
             'id' => $userChore->id,
             'approval_status' => UserChoreApprovalStatuses::$REJECTED
         ]);
@@ -212,7 +223,7 @@ class ApproveWorkTest extends APITestCase
         $this->setupApprovedRequest($userChore);
         $userWalletBeforeApproval = $this->user->wallet;
 
-        $response = $this->put('/api/user-chore/approve-work', [
+        $response = $this->urlConfig('put', 'user/chore/approve', [
             'id' => $userChore->id,
             'approval_status' => UserChoreApprovalStatuses::$REJECTED
         ]);
@@ -235,7 +246,7 @@ class ApproveWorkTest extends APITestCase
         $this->setupRejectedRequest($userChore);
         $userWalletBeforeApproval = $this->user->wallet;
 
-        $response = $this->put('/api/user-chore/approve-work', [
+        $response = $this->urlConfig('put', 'user/chore/approve', [
             'id' => $userChore->id,
             'approval_status' => UserChoreApprovalStatuses::$APPROVED
         ]);
@@ -260,7 +271,7 @@ class ApproveWorkTest extends APITestCase
         $this->setupApprovedRequest($userChore);
         $userWalletBeforeApproval = $this->user->wallet;
 
-        $response = $this->put('/api/user-chore/approve-work', [
+        $response = $this->urlConfig('put', 'user/chore/approve', [
             'id' => $userChore->id,
             'approval_status' => UserChoreApprovalStatuses::$PENDING
         ]);
@@ -275,6 +286,18 @@ class ApproveWorkTest extends APITestCase
         $this->assertNull($response['rejected_date']);
         $this->assertGreaterThan($this->chore->cost, $userWalletBeforeApproval);
         $this->assertEquals($userWalletAfterApproval, $userWalletBeforeApproval - $chore->cost);
+    }
+
+    public function noAccessWithoutToken()
+    {
+        $response = $this->urlConfig('put', 'user/chore/approve', [
+            'approval_status' => UserChoreApprovalStatuses::$PENDING
+        ]);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 
     private function setupApprovalRequestWithPendingStatus($userChore)

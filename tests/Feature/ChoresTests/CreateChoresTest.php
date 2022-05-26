@@ -51,7 +51,7 @@ class CreateChoresTest extends APITestCase
 
     private function canCreateChore()
     {
-        $response = $this->urlConfig('post', 'chore', null, $this->createChoreInput);
+        $response = $this->urlConfig('post', 'chore', $this->createChoreInput);
 
         $response->assertStatus(201);
         $response->assertJsonPath('name', $this->createChoreInput['name']);
@@ -59,7 +59,7 @@ class CreateChoresTest extends APITestCase
 
     private function cannotCreateChore()
     {
-        $response = $this->urlConfig('post', 'chore', null, $this->createChoreInput);
+        $response = $this->urlConfig('post', 'chore', $this->createChoreInput);
 
         $errorMessage = $response->exception->getMessage();
 
@@ -71,7 +71,7 @@ class CreateChoresTest extends APITestCase
     {
         $chore = Chore::factory()->create();
 
-        $response = $this->urlConfig('post', 'chore', null, [...$this->createChoreInput, 'name' => $chore->name]);
+        $response = $this->urlConfig('post', 'chore', [...$this->createChoreInput, 'name' => $chore->name]);
 
         $errorMessage = $response->exception->getMessage();
 

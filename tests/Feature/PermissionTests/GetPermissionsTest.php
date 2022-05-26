@@ -28,6 +28,20 @@ class GetPermissionsTest extends APITestCase
         $this->cannotGetPermissions();
     }
 
+    /** @test */
+    public function no_access_user_cannot_get_permissions()
+    {
+        $this->initNoAccessUser();
+        $this->cannotGetPermissions();
+    }
+
+    /** @test */
+    public function no_access_user_cannot_get_permissions_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotGetPermissionsWithoutToken();
+    }
+
     private function getPermissions()
     {
 
@@ -35,7 +49,7 @@ class GetPermissionsTest extends APITestCase
             return $permission->name;
         });
 
-        $response = $this->get('/api/permissions');
+        $response = $this->urlConfig('get', 'permissions');
         $responseNames = $response->baseResponse->original->map(function ($resPermission) {
             return $resPermission['name'];
         });
@@ -48,10 +62,20 @@ class GetPermissionsTest extends APITestCase
 
     private function cannotGetPermissions()
     {
-        $response = $this->get('/api/permissions');
+        $response = $this->urlConfig('get', 'permissions');
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to get permissions', $errorMessage);
+    }
+
+    public function cannotGetPermissionsWithoutToken()
+    {
+        $response = $this->urlConfig('get', 'permissions');
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

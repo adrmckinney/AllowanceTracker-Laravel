@@ -40,10 +40,24 @@ class UpdatePermissionTest extends APITestCase
         $this->cannotUpdatePermission();
     }
 
+    /** @test */
+    public function no_access_user_cannot_update_chore()
+    {
+        $this->initNoAccessUser();
+        $this->cannotUpdatePermission();
+    }
+
+    /** @test */
+    public function no_access_user_cannot_update_permission_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotUpdatePermissionWithoutToken();
+    }
+
     private function canUpdatePermission()
     {
         $permission = $this->getAllPermissions()->first();
-        $response = $this->put("/api/permission/update", [...$this->input, 'id' => $permission->id]);
+        $response = $this->urlConfig('put', 'permission/update', [...$this->input, 'id' => $permission->id]);
 
         $responseName = $response->baseResponse->original->name;
 
@@ -54,10 +68,20 @@ class UpdatePermissionTest extends APITestCase
     private function cannotUpdatePermission()
     {
         $permission = $this->getAllPermissions()->first();
-        $response = $this->put("/api/permission/update", [...$this->input, 'id' => $permission->id]);
+        $response = $this->urlConfig('put', 'permission/update', [...$this->input, 'id' => $permission->id]);
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to update this permission', $errorMessage);
+    }
+
+    public function cannotUpdatePermissionWithoutToken()
+    {
+        $response = $this->urlConfig('put', 'permission/update', $this->input);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

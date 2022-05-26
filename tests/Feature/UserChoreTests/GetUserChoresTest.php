@@ -47,16 +47,22 @@ class GetUserChoresTest extends APITestCase
         $this->cannotGetUserChores();
     }
 
+    /** @test */
+    public function no_access_cannot_get_user_chores_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotGetUserChoresWithoutToken();
+    }
+
     private function getUserChores($target = null)
     {
         if ($target === 'self') {
             $userChores = $this->createChoresWithSameUser($this->authUser, $this->chores);
-            $response = $this->get("/api/get-user-chores/{$this->authUser->id}");
+            $response = $this->urlConfig('get', "user/{$this->authUser->id}/chores");
         } else {
             $userChores = $this->createChoresWithSameUser($this->user, $this->chores);
-            $response = $this->get("/api/get-user-chores/{$this->user->id}");
+            $response = $this->urlConfig('get', "user/{$this->user->id}/chores");
         }
-
 
         $userChoreIds = [];
         $responseUserChoreIds = [];
@@ -84,11 +90,21 @@ class GetUserChoresTest extends APITestCase
     private function cannotGetUserChores()
     {
         $userChores = $this->createChoresWithSameUser($this->user, $this->chores);
-        $response = $this->get("/api/get-user-chores/{$this->user->id}");
+        $response = $this->urlConfig('get', "user/{$this->user->id}/chores");
 
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to get chores', $errorMessage);
+    }
+
+    public function cannotGetUserChoresWithoutToken()
+    {
+        $response = $this->urlConfig('get', "user/{$this->user->id}/chores");
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

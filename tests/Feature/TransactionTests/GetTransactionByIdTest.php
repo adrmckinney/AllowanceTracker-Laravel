@@ -62,9 +62,16 @@ class GetTransactionByIdTest extends APITestCase
         $this->cannotGetTransaction();
     }
 
+    /** @test */
+    public function no_access_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->noAccessWithoutToken();
+    }
+
     private function canGetTransaction()
     {
-        $response = $this->get("/api/transaction/{$this->transaction->id}");
+        $response = $this->urlConfig('get', "transaction/{$this->transaction->id}");
 
         $response->assertStatus(200);
 
@@ -76,11 +83,21 @@ class GetTransactionByIdTest extends APITestCase
 
     public function cannotGetTransaction()
     {
-        $response = $this->get("/api/transaction/{$this->transaction->id}");
+        $response = $this->urlConfig('get', "transaction/{$this->transaction->id}");
 
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to see this transaction', $errorMessage);
+    }
+
+    public function noAccessWithoutToken()
+    {
+        $response = $this->urlConfig('get', "transaction/{$this->transaction->id}");
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

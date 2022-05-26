@@ -46,11 +46,18 @@ class RequestChoreApprovalTest extends APITestCase
         $this->cannotRequestApproval();
     }
 
+    /** @test */
+    public function no_access_cannot_request_approval_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotRequestApprovalWithoutToken();
+    }
+
     private function canRequestApproval()
     {
         $userChore = $this->createUserChore();
 
-        $response = $this->put('/api/user-chore/request-approval', [
+        $response = $this->urlConfig('put', 'user/chore/request', [
             'id' => $userChore->id,
             'approval_requested' => true
         ]);
@@ -64,9 +71,10 @@ class RequestChoreApprovalTest extends APITestCase
     private function cannotRequestApproval()
     {
         $userChore = $this->createUserChore();
-        $response = $this->put('/api/user-chore/request-approval', [
+
+        $response = $this->urlConfig('put', 'user/chore/request', [
             'id' => $userChore->id,
-            'approval_request' => true
+            'approval_requested' => true
         ]);
         $errorMessage = $response->exception->getMessage();
 
@@ -74,14 +82,15 @@ class RequestChoreApprovalTest extends APITestCase
         $this->assertEquals('You do not have access to request approval', $errorMessage);
     }
 
-    private function canApproveChore()
+    public function cannotRequestApprovalWithoutToken()
     {
-        $input = ['approval_requested' => true];
-        $response = $this->put('/api/chore', ['id' => $this->chore->id, ...$input]);
+        $userChore = $this->createUserChore();
 
-        $this->assertEquals($this->chore->name, $response['name']);
-        $this->assertEquals($input['approval_requested'], $response['approval_requested']);
-        $this->assertNotNull($response['approval_request_date']);
-        $this->assertEquals(UserChoreApprovalStatuses::$PENDING, $response['approval_status']);
+        $response = $this->urlConfig('delete', "user-chore/{$userChore->id}/remove");
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

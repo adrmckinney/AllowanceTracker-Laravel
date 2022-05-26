@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chore;
+use App\Types\ChoreType;
 use Illuminate\Http\Request;
 
 class ChoreController extends Controller
@@ -31,18 +32,17 @@ class ChoreController extends Controller
         if ($this->choreExists($request->name)) {
             abort(406, 'A chore with this name already exists.');
         }
+        if ($request->user()->cannot('create', Chore::class)) {
+            abort(403, 'You do not have access to create a chore');
+        }
 
-        $chore = Chore::create([
+        $createChore = new ChoreType([
             'name' => $request['name'],
             'description' => $request['description'],
             'cost' => $request['cost'],
         ]);
 
-        if ($request->user()->cannot('create', $chore)) {
-            abort(403, 'You do not have access to create a chore');
-        }
-
-        return $chore;
+        return Chore::create($createChore->toCreateArray());
     }
 
     public function updateChore(Request $request)
@@ -71,6 +71,18 @@ class ChoreController extends Controller
                 $chore->save();
             }
         }
+        return $chore;
+    }
+
+    public function deleteChore(Request $request, $id)
+    {
+        if ($request->user()->cannot('delete', Chore::class)) {
+            abort(403, 'You do not have access to delete this chore');
+        };
+
+        $chore = $this->getChoreById($id);
+        $chore->delete();
+
         return $chore;
     }
 

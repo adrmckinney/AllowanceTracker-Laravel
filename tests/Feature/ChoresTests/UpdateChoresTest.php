@@ -61,7 +61,7 @@ class UpdateChoresTest extends APITestCase
 
     private function canUpdateChore()
     {
-        $response = $this->urlConfig('put', 'chore', null, [...$this->input, 'id' => $this->chore->id]);
+        $response = $this->urlConfig('put', 'chore', [...$this->input, 'id' => $this->chore->id]);
 
         $this->assertEquals($this->input['name'], $response['name']);
         $this->assertEquals($this->input['description'], $response['description']);
@@ -70,7 +70,7 @@ class UpdateChoresTest extends APITestCase
 
     private function cannotUpdateChore()
     {
-        $response = $this->urlConfig('put', 'chore', null, [...$this->input, 'id' => $this->chore->id]);
+        $response = $this->urlConfig('put', 'chore', [...$this->input, 'id' => $this->chore->id]);
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
@@ -81,7 +81,7 @@ class UpdateChoresTest extends APITestCase
     {
         $chore2 = Chore::factory()->create();
 
-        $response = $this->urlConfig('put', 'chore', null, [
+        $response = $this->urlConfig('put', 'chore', [
             ...$this->input,
             'id' => $this->chore->id,
             'name' => $chore2->name

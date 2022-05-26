@@ -39,15 +39,13 @@ class UserChoreController extends Controller
         return $userChore;
     }
 
-    public function getUserChores(Request $request, $userIdOfChores)
+    public function getUserChores(Request $request, $userId)
     {
         if ($request->user()->cannot('getMany', UserChore::class)) {
             abort(403, 'You do not have access to get chores');
         }
 
-        $userChores = $this->getChoresOfUser($userIdOfChores);
-
-        return $userChores;
+        return UserChore::where('user_id', '=', $userId)->get();
     }
 
     public function getChoreUsers(Request $request, $choreId)
@@ -55,36 +53,35 @@ class UserChoreController extends Controller
         if ($request->user()->cannot('getMany', UserChore::class)) {
             abort(403, 'You do not have access to get chores');
         }
-
         $userChores = $this->getChoresByUserId($choreId);
 
         return $userChores;
     }
 
-    public function addChoreToUser(Request $request)
+    public function addChoreToUser(Request $request, $userId, $choreId)
     {
         if ($request->user()->cannot('add', UserChore::class)) {
             abort(403, 'You do not have access to be added to this chore');
         }
 
-        $createChore = new UserChoreType([
-            'user_id' => $request['user_id'],
-            'chore_id' => $request['chore_id'],
+        $createUserChore = new UserChoreType([
+            'user_id' => $userId,
+            'chore_id' => $choreId,
             'approval_requested' => false,
             'approval_request_date' => NULL,
             'approval_status' => UserChoreApprovalStatuses::$NONE,
             'approval_date' => NULL,
         ]);
 
-        return UserChore::create($createChore->toCreateArray());
+        return UserChore::create($createUserChore->toCreateArray());
     }
 
-    public function removeChoreFromUser(Request $request)
+    public function removeChoreFromUser(Request $request, $id)
     {
         if ($request->user()->cannot('remove', UserChore::class)) {
             abort(403, 'You do not have access to remove to this chore');
         }
-        $userChore = $this->getUserChoreById($request->id);
+        $userChore = $this->getUserChoreById($id);
         $userChore->delete();
 
         return $userChore;
@@ -128,10 +125,10 @@ class UserChoreController extends Controller
         return UserChore::where('chore_id', '=', $chore_id)->get();
     }
 
-    public function getChoresOfUser($user_id)
-    {
-        return UserChore::where('user_id', '=', $user_id)->get();
-    }
+    // public function getChoresOfUser($user_id)
+    // {
+    //     return UserChore::where('user_id', '=', $user_id)->get();
+    // }
 
     public function isRequestingApproval($request, $field)
     {

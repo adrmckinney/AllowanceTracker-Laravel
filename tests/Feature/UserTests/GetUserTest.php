@@ -48,7 +48,7 @@ class GetUserTest extends APITestCase
         $user = $this->authUser;
 
         $permissionId = $this->authUser->permissions->toArray()[0]['permission_id'];
-        $response = $this->urlConfig('get', 'user', $user->id);
+        $response = $this->urlConfig('get', "user/{$user->id}");
 
         $response->assertStatus(200);
         $response->assertJsonPath('name', $user->name);
@@ -59,7 +59,7 @@ class GetUserTest extends APITestCase
     public function cannotGetUser()
     {
         $user = $this->authUser;
-        $response = $this->urlConfig('get', 'user', $user->id);
+        $response = $this->urlConfig('get', "user/{$user->id}");
 
         $errorMessage = $response->exception->getMessage();
 
@@ -71,7 +71,7 @@ class GetUserTest extends APITestCase
     {
         $user = $this->authUser;
 
-        $response = $this->urlConfig('get', 'user', $user->id);
+        $response = $this->urlConfig('get', "user/{$user->id}");
 
         $errorMessage = $response->exception->getMessage();
 

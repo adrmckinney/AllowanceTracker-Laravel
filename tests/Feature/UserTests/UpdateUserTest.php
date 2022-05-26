@@ -146,7 +146,7 @@ class UpdateUserTest extends APITestCase
         // Really seems like I will need an audit for this
         // How do I save the amount spent
 
-        $response = $this->urlConfig('put', 'user/update', null, [$target => $new]);
+        $response = $this->urlConfig('put', 'user/update', [$target => $new]);
 
         $response->assertStatus(200);
         $response->assertJsonPath($target, $new);
@@ -155,7 +155,7 @@ class UpdateUserTest extends APITestCase
 
     public function cannotUpdateUser($target, $old, $new)
     {
-        $response = $this->urlConfig('put', 'user/update', null, [$target => $new]);
+        $response = $this->urlConfig('put', 'user/update', [$target => $new]);
 
         $errorMessage = $response->exception->getMessage();
 
@@ -167,7 +167,7 @@ class UpdateUserTest extends APITestCase
     {
         $user = $this->authUser;
 
-        $response = $this->urlConfig('put', 'user/update', null, [$target => $new]);
+        $response = $this->urlConfig('put', 'user/update', [$target => $new]);
 
         $errorMessage = $response->exception->getMessage();
 

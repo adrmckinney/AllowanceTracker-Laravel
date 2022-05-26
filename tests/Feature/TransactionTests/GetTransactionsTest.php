@@ -63,10 +63,16 @@ class GetTransactionsTest extends APITestCase
         $this->cannotGetTransactionsList();
     }
 
+    /** @test */
+    public function no_access_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->noAccessWithoutToken();
+    }
 
     private function canGetTransactionsList()
     {
-        $response = $this->get("/api/transactions");
+        $response = $this->urlConfig('get', 'transactions');
         $response->assertStatus(200);
 
         $response->assertJsonCount($this->count);
@@ -80,11 +86,21 @@ class GetTransactionsTest extends APITestCase
 
     public function cannotGetTransactionsList()
     {
-        $response = $this->get("/api/transactions");
+        $response = $this->urlConfig('get', 'transactions');
 
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to see transactions', $errorMessage);
+    }
+
+    public function noAccessWithoutToken()
+    {
+        $response = $this->urlConfig('get', 'transactions');
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

@@ -47,10 +47,17 @@ class GetAllChoreUsersTest extends APITestCase
         $this->cannotGetChoreUsers();
     }
 
+    /** @test */
+    public function no_access_cannot_get_chore_users_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotGetChoreUsersWithoutToken();
+    }
+
     private function getChoreUsers($target = null)
     {
-        $userChores = $this->createChoreWithMultipleUsers($this->users, $this->chore);
-        $response = $this->get("/api/get-chore-users/{$this->chore->id}");
+        $usersChore = $this->createChoreWithMultipleUsers($this->users, $this->chore);
+        $response = $this->urlConfig('get', "users/chore/{$this->chore->id}");
 
         $userChoreIds = [];
         $responseUserChoreIds = [];
@@ -59,7 +66,7 @@ class GetAllChoreUsersTest extends APITestCase
         $userChoreChoreIds = [];
         $responseUserChoreChoreIds = [];
 
-        foreach ($userChores as $userChore) {
+        foreach ($usersChore as $userChore) {
             array_push($userChoreIds, $userChore->id);
             array_push($userChoreUserIds, $userChore->user_id);
             array_push($userChoreChoreIds, $userChore->chore_id);
@@ -78,10 +85,22 @@ class GetAllChoreUsersTest extends APITestCase
     private function cannotGetChoreUsers()
     {
         $this->createChoreWithMultipleUsers($this->users, $this->chore);
-        $response = $this->get("/api/get-chore-users/{$this->chore->id}");
+        $response = $this->urlConfig('get', "users/chore/{$this->chore->id}");
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to get chores', $errorMessage);
+    }
+
+    public function cannotGetChoreUsersWithoutToken()
+    {
+        $this->createChoreWithMultipleUsers($this->users, $this->chore);
+
+        $response = $this->urlConfig('get', "users/chore/{$this->chore->id}");
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

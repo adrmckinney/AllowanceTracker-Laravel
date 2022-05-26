@@ -69,7 +69,8 @@ class SpendTransactionTest extends APITestCase
             'transaction_amount' => 1000,
             'transaction_type' => TransactionTypes::$WITHDRAW
         ];
-        $response = $this->post("/api/transaction/spend", $input);
+
+        $response = $this->urlConfig('post', 'transaction/spend', $input);
 
         $response->assertStatus(201);
         $response->assertJsonPath('user_id', $input['user_id'])
@@ -80,7 +81,13 @@ class SpendTransactionTest extends APITestCase
 
     public function cannotSpendOwnMoney()
     {
-        $response = $this->get("/api/transactions");
+        $input = [
+            "user_id" => $this->authUser->id,
+            'transaction_amount' => 1000,
+            'transaction_type' => TransactionTypes::$WITHDRAW
+        ];
+
+        $response = $this->urlConfig('post', 'transaction/spend', $input);
 
         $errorMessage = $response->exception->getMessage();
 

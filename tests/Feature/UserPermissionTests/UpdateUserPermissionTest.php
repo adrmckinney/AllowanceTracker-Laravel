@@ -62,6 +62,20 @@ class UpdateUserPermissionTest extends APITestCase
         $this->cannotUpdatePermission(PermissionTypes::$PARENT, PermissionTypes::$CHILD);
     }
 
+    /** @test */
+    public function no_access_user_cannot_update_parent_permission_level_to_child()
+    {
+        $this->initNoAccessUser();
+        $this->cannotUpdatePermission(PermissionTypes::$PARENT, PermissionTypes::$CHILD);
+    }
+
+    /** @test */
+    public function no_access_user_cannot_update_user_permission_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotUpdateUserPermissionWithoutToken();
+    }
+
     private function updatePermissionLevel($currentLevelId, $newLevelId)
     {
         UsersPermissions::factory()->create([
@@ -71,7 +85,7 @@ class UpdateUserPermissionTest extends APITestCase
 
         $newPermission = $this->getPermission($newLevelId);
 
-        $response = $this->put('/api/user-permission/update', [
+        $response = $this->urlConfig('put', 'user/permission/update', [
             'user_id' => $this->user->id,
             'name' => $newPermission->name
         ]);
@@ -90,7 +104,7 @@ class UpdateUserPermissionTest extends APITestCase
 
         $newPermission = $this->getPermission($newLevelId);
 
-        $response = $this->put('/api/user-permission/update', [
+        $response = $this->urlConfig('put', 'user/permission/update', [
             'user_id' => $this->user->id,
             'name' => $newPermission->name
         ]);
@@ -100,25 +114,15 @@ class UpdateUserPermissionTest extends APITestCase
         $this->assertEquals('You do not have access to update permissions', $errorMessage);
     }
 
-    private function getPermission($type)
+    public function cannotUpdateUserPermissionWithoutToken()
     {
-        switch ($type) {
-            case PermissionTypes::$PARENT:
-                return $this->permission =
-                    Permission::where('name', '=', PermissionTypes::getPermissionName(PermissionTypes::$PARENT))
-                    ->first();
-            case PermissionTypes::$CHILD:
-                return $this->permission =
-                    Permission::where('name', '=', PermissionTypes::getPermissionName(PermissionTypes::$CHILD))
-                    ->first();
-            case PermissionTypes::$ADMIN:
-                return $this->permission =
-                    Permission::where('name', '=', PermissionTypes::getPermissionName(PermissionTypes::$ADMIN))
-                    ->first();
-            case PermissionTypes::$NO_ACCESS:
-                return $this->permission =
-                    Permission::where('name', '=', PermissionTypes::getPermissionName(PermissionTypes::$NO_ACCESS))
-                    ->first();
-        }
+        $response = $this->urlConfig('put', 'user/permission/update', [
+            'user_id' => $this->user->id,
+        ]);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

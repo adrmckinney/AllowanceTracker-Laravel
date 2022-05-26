@@ -6,7 +6,7 @@ use App\Models\Chore;
 use Tests\APITestCase;
 
 
-class GetChoreTest extends APITestCase
+class DeleteChoreTest extends APITestCase
 {
     protected $chore;
 
@@ -18,63 +18,61 @@ class GetChoreTest extends APITestCase
     }
 
     /** @test */
-    public function admin_user_can_get_chore()
+    public function admin_user_can_delete_chore()
     {
         $this->initAdminUser();
-        $this->canGetChore();
+        $this->canDeleteChore();
     }
 
     /** @test */
-    public function parent_user_can_get_chore()
+    public function parent_user_can_delete_chore()
     {
         $this->initParentUser();
-        $this->canGetChore();
+        $this->canDeleteChore();
     }
 
     /** @test */
-    public function child_user_can_get_chore()
+    public function child_user_can_delete_chore()
     {
         $this->initChildUser();
-        $this->canGetChore();
+        $this->cannotDeleteChore();
     }
 
     /** @test */
-    public function no_access_user_cannot_get_chore()
+    public function no_access_user_cannot_delete_chore()
     {
         $this->initNoAccessUser();
-        $this->cannotGetChore();
+        $this->cannotDeleteChore();
     }
 
     /** @test */
-    public function no_access_user_cannot_get_chore_without_token()
+    public function no_access_user_cannot_delete_chore_without_token()
     {
         $this->initNoTokenAccessUser();
-        $this->cannotGetChoreWithoutToken();
+        $this->cannotDeleteChoreWithoutToken();
     }
 
-    private function canGetChore()
+    private function canDeleteChore()
     {
-        $response = $this->urlConfig('get', "chore/{$this->chore->id}");
+        $response = $this->urlConfig('delete', "chore/{$this->chore->id}");
 
         $response->assertStatus(200);
         $response->assertJsonPath('name', $this->chore['name']);
     }
 
-    private function cannotGetChore()
+    private function cannotDeleteChore()
     {
-        $response = $this->urlConfig('get', "chore/{$this->chore->id}");
+        $response = $this->urlConfig('delete', "chore/{$this->chore->id}");
 
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
-        $this->assertEquals('You do not have access to get this chore', $errorMessage);
+        $this->assertEquals('You do not have access to delete this chore', $errorMessage);
     }
 
-    public function cannotGetChoreWithoutToken()
+    public function cannotDeleteChoreWithoutToken()
     {
-        $user = $this->authUser;
-
-        $response = $this->urlConfig('get', "chore/{$this->chore->id}");
+        $response = $this->urlConfig('delete', "chore/{$this->chore->id}");
 
         $errorMessage = $response->exception->getMessage();
 

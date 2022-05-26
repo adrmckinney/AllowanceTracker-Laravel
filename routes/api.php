@@ -41,29 +41,27 @@ Route::get('/chore/{id}', [ChoreController::class, 'getChore'])->middleware('aut
 Route::get('/chores', [ChoreController::class, 'getChoreList'])->middleware('auth');
 Route::post('/chore', [ChoreController::class, 'createChore'])->middleware('auth');
 Route::put('/chore', [ChoreController::class, 'updateChore'])->middleware('auth');
+Route::delete('/chore/{id}', [ChoreController::class, 'deleteChore'])->middleware('auth');
 
-Route::get('/user-chore/get/{id}', [UserChoreController::class, 'getUserChore'])->middleware('auth');
-Route::get("/get-user-chores/{id}", [UserChoreController::class, 'getUserChores'])->middleware('auth');
-Route::get("/get-chore-users/{id}", [UserChoreController::class, 'getChoreUsers'])->middleware('auth');
-Route::post('/user-chore/add', [UserChoreController::class, 'addChoreToUser'])->middleware('auth');
-Route::put('/user-chore/request-approval', [UserChoreController::class, 'requestApproval'])->middleware('auth');
-Route::put('/user-chore/approve-work', [UserChoreController::class, 'approveWork'])->middleware('auth');
-Route::delete('/user-chore/remove', [UserChoreController::class, 'removeChoreFromUser'])->middleware('auth');
+Route::get('/user-chore/{id}', [UserChoreController::class, 'getUserChore'])->middleware('auth');
+Route::get("/user/{id}/chores", [UserChoreController::class, 'getUserChores'])->middleware('auth');
+Route::get("/users/chore/{id}", [UserChoreController::class, 'getChoreUsers'])->middleware('auth');
+Route::post('/user/{userId}/chore/{choreId}/add', [UserChoreController::class, 'addChoreToUser'])->middleware('auth');
+Route::put('/user/chore/request', [UserChoreController::class, 'requestApproval'])->middleware('auth');
+Route::put('/user/chore/approve', [UserChoreController::class, 'approveWork'])->middleware('auth');
+Route::delete("/user-chore/{id}/remove", [UserChoreController::class, 'removeChoreFromUser'])->middleware('auth');
 
 Route::get('/permission/{id}', [PermissionsController::class, 'getPermission'])->middleware('auth');
 Route::get('/permissions', [PermissionsController::class, 'getPermissions'])->middleware('auth');
 Route::post('/permission/create', [PermissionsController::class, 'createPermission'])->middleware('auth');
 Route::put('/permission/update', [PermissionsController::class, 'updatePermission'])->middleware('auth');
 
-Route::post('/user-permission/add', [UserPermissionController::class, 'addPermission'])->middleware('auth');
-Route::put('/user-permission/update', [UserPermissionController::class, 'updatePermission'])->middleware('auth');
+Route::post('/user/permission/add', [UserPermissionController::class, 'addPermission'])->middleware('auth');
+Route::put('/user/permission/update', [UserPermissionController::class, 'updatePermission'])->middleware('auth');
 
 Route::get('/transaction/{id}', [TransactionController::class, 'getTransaction'])->middleware('auth');
 Route::get('/transactions', [TransactionController::class, 'getTransactionsList'])->middleware('auth');
 Route::post('/transaction/spend', [TransactionController::class, 'spendTransaction'])->middleware('auth');
-
-// Route::get('/login', [LoginController::class, 'show'])->name('login.show');
-// Route::post('/login', [LoginController::class, 'login'])->name('login.perform');
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {
     /**

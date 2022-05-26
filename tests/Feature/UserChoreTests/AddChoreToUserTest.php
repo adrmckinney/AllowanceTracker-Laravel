@@ -46,15 +46,18 @@ class AddChoreToUserTest extends APITestCase
         $this->cannotAssignChoreToUser();
     }
 
+    /** @test */
+    public function no_access_cannot_add_chore_to_user_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotAddChoreToUserWithoutToken();
+    }
+
     private function canAssignChoreToUser()
     {
+        $response = $this->urlConfig('post', "user/{$this->authUser->id}/chore/{$this->chore->id}/add");
 
-        $response = $this->post('/api/user-chore/add', [
-            'user_id' => $this->authUser->id,
-            'chore_id' => $this->chore->id
-        ]);
-
-        $response->assertJsonPath('chore_id', $this->chore->id);
+        $response->assertJsonPath('chore_id', (string) $this->chore->id);
         $this->assertDatabaseHas('user_chore', [
             'user_id' => $this->authUser->id,
             'chore_id' => $this->chore->id,
@@ -67,45 +70,20 @@ class AddChoreToUserTest extends APITestCase
 
     private function cannotAssignChoreToUser()
     {
-        $response = $this->post('/api/user-chore/add', [
-            'user_id' => $this->authUser->id,
-            'chore_id' => $this->chore->id
-        ]);
+        $response = $this->urlConfig('post', "user/{$this->authUser->id}/chore/{$this->chore->id}/add");
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to be added to this chore', $errorMessage);
     }
 
-    private function canRequestChoreApproval()
+    public function cannotAddChoreToUserWithoutToken()
     {
-        $input = ['approval_requested' => true];
-        $response = $this->put('/api/chore', ['id' => $this->chore->id, ...$input]);
+        $response = $this->urlConfig('post', "user/{$this->authUser->id}/chore/{$this->chore->id}/add");
 
-        $this->assertEquals($this->chore->name, $response['name']);
-        $this->assertEquals($input['approval_requested'], $response['approval_requested']);
-        $this->assertNotNull($response['approval_request_date']);
-        $this->assertEquals(UserChoreApprovalStatuses::$PENDING, $response['approval_status']);
-    }
-
-    private function cannotRequestChoreApproval()
-    {
-        $input = ['approval_requested' => true];
-        $response = $this->put('/api/chore', ['id' => $this->chore->id, ...$input]);
         $errorMessage = $response->exception->getMessage();
 
-        $response->assertStatus(403);
-        $this->assertEquals('You do not have access to update this chore', $errorMessage);
-    }
-
-    private function canApproveChore()
-    {
-        $input = ['approval_requested' => true];
-        $response = $this->put('/api/chore', ['id' => $this->chore->id, ...$input]);
-
-        $this->assertEquals($this->chore->name, $response['name']);
-        $this->assertEquals($input['approval_requested'], $response['approval_requested']);
-        $this->assertNotNull($response['approval_request_date']);
-        $this->assertEquals(UserChoreApprovalStatuses::$PENDING, $response['approval_status']);
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

@@ -47,10 +47,17 @@ class GetUserChoreByIdTest extends APITestCase
         $this->cannotGetUserChoreById();
     }
 
+    /** @test */
+    public function no_access_cannot_get_user_chore_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotGetUserChoreWithoutToken();
+    }
+
     private function getUserChoreById()
     {
         $userChore = $this->createUserChore();
-        $response = $this->get("/api/user-chore/get/{$userChore->id}");
+        $response = $this->urlConfig('get', "user-chore/{$userChore->id}");
 
         $response->assertJsonPath('user_id', $this->authUser->id)
             ->assertJsonPath('chore_id', $this->chore->id)
@@ -62,10 +69,22 @@ class GetUserChoreByIdTest extends APITestCase
     private function cannotGetUserChoreById()
     {
         $userChore = $this->createUserChore();
-        $response = $this->get("/api/user-chore/get/{$userChore->id}");
+        $response = $this->urlConfig('get', "user-chore/{$userChore->id}");
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to get this chore', $errorMessage);
+    }
+
+    public function cannotGetUserChoreWithoutToken()
+    {
+        $userChore = $this->createUserChore();
+
+        $response = $this->urlConfig('get', "user-chore/{$userChore->id}");
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

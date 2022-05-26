@@ -46,12 +46,18 @@ class RemoveChoreFromUserTest extends APITestCase
         $this->cannotRemoveChoreFromUser();
     }
 
+    /** @test */
+    public function no_access_cannot_remove_user_chore_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotDeleteUserChoreWithoutToken();
+    }
+
     private function canRemoveChoreFromUser()
     {
         $userChore = $this->createUserChore();
-        $response = $this->delete('/api/user-chore/remove', [
-            'id' => $userChore->id
-        ]);
+
+        $response = $this->urlConfig('delete', "user-chore/{$userChore->id}/remove");
 
         $response->assertJsonPath('id', $userChore->id);
         $response->assertJsonPath('chore_id', $userChore->chore_id);
@@ -65,12 +71,25 @@ class RemoveChoreFromUserTest extends APITestCase
             'chore_id' => $this->chore->id
         ]);
 
-        $response = $this->delete('/api/user-chore/remove', [
-            'id' => $userChore->id
-        ]);
+        $response = $this->urlConfig('delete', "user-chore/{$userChore->id}/remove");
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to remove to this chore', $errorMessage);
+    }
+
+    public function cannotDeleteUserChoreWithoutToken()
+    {
+        $userChore = UserChore::factory()->create([
+            'user_id' => $this->authUser->id,
+            'chore_id' => $this->chore->id
+        ]);
+
+        $response = $this->urlConfig('delete', "user-chore/{$userChore->id}/remove");
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }

@@ -110,19 +110,19 @@ trait WithUserHelpers
         ];
     }
 
-    public function urlConfig($action, $baseUrl, $id = null, $input = null)
+    public function urlConfig($callType, $uri, $input = null)
     {
-        if ($input === null) {
-            return $this->$action(
-                "api/{$baseUrl}/{$id}",
-                $this->getHeaders(),
-            );
+        if (is_null($input)) {
+            return $this->withHeaders($this->getHeaders())
+                ->$callType(
+                    "api/{$uri}",
+                );
         } else {
-            return $this->$action(
-                "api/{$baseUrl}/{$id}",
-                $input,
-                $this->getHeaders(),
-            );
+            return $this->withHeaders($this->getHeaders())
+                ->$callType(
+                    "api/{$uri}",
+                    $input,
+                );
         }
     }
 }

@@ -83,12 +83,18 @@ class AddPermissionToUserTest extends APITestCase
         $this->cannotAddPermissionAlreadyAssigned(PermissionTypes::$PARENT);
     }
 
+    /** @test */
+    public function no_access_user_cannot_add_permission_without_token()
+    {
+        $this->initNoTokenAccessUser();
+        $this->cannotAddPermissionWithoutToken();
+    }
 
     private function addPermissionLevelParent($permLevel)
     {
         $permission = $this->getPermission($permLevel);
 
-        $response = $this->post('/api/user-permission/add', [
+        $response = $this->urlConfig('post', 'user/permission/add', [
             'user_id' => $this->user->id,
             'name' => $permission->name
         ]);
@@ -102,10 +108,11 @@ class AddPermissionToUserTest extends APITestCase
     {
         $permission = $this->getPermission($permLevel);
 
-        $response = $this->post('/api/user-permission/add', [
+        $response = $this->urlConfig('post', 'user/permission/add', [
             'user_id' => $this->user->id,
             'name' => $permission->name
         ]);
+
         $errorMessage = $response->exception->getMessage();
 
         $response->assertStatus(403);
@@ -121,7 +128,7 @@ class AddPermissionToUserTest extends APITestCase
             'permission_id' => $permission->id
         ]);
 
-        $response = $this->post('/api/user-permission/add', [
+        $response = $this->urlConfig('post', 'user/permission/add', [
             'user_id' => $this->user->id,
             'name' => $permission->name
         ]);
@@ -132,21 +139,15 @@ class AddPermissionToUserTest extends APITestCase
         $this->assertEquals("Permission: User already has this permission - {$permission->name}", $errorMessage);
     }
 
-    private function getPermission($type)
+    public function cannotAddPermissionWithoutToken()
     {
-        switch ($type) {
-            case PermissionTypes::$PARENT:
-                return $this->permission =
-                    Permission::where('name', '=', PermissionTypes::getPermissionName(PermissionTypes::$PARENT))
-                    ->first();
-            case PermissionTypes::$CHILD:
-                return $this->permission =
-                    Permission::where('name', '=', PermissionTypes::getPermissionName(PermissionTypes::$CHILD))
-                    ->first();
-            case PermissionTypes::$ADMIN:
-                return $this->permission =
-                    Permission::where('name', '=', PermissionTypes::getPermissionName(PermissionTypes::$ADMIN))
-                    ->first();
-        }
+        $response = $this->urlConfig('post', 'user/permission/add', [
+            'user_id' => $this->user->id,
+        ]);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(401);
+        $this->assertEquals('Unauthenticated.', $errorMessage);
     }
 }
