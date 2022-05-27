@@ -33,9 +33,10 @@ Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEm
 Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm']);
 Route::post('password/reset', [ResetPasswordController::class, 'resetPassword'])->middleware('auth');
 
-Route::get('/user/{id}', [UserController::class, 'getUser'])->middleware('auth');
+Route::get('/me/{id}', [UserController::class, 'getUser'])->middleware('auth');
 Route::get('/users', [UserController::class, 'getUsers'])->middleware('auth');
 Route::put('/user/update', [UserController::class, 'update'])->middleware('auth');
+Route::delete('/user/{id}', [UserController::class, 'deleteUser'])->middleware('auth');
 
 Route::get('/chore/{id}', [ChoreController::class, 'getChore'])->middleware('auth');
 Route::get('/chores', [ChoreController::class, 'getChoreList'])->middleware('auth');

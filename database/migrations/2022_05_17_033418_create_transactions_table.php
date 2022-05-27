@@ -29,8 +29,15 @@ return new class extends Migration
                 ->on('chores')
                 ->onDelete('cascade');
 
+            $table->unsignedBigInteger('transfer_passive_user_id')->nullable();
             $table->integer('transaction_amount')->default(0);
             $table->unsignedInteger('transaction_type');
+
+            $table->boolean('approval_requested')->default(0);
+            $table->timestamp('approval_request_date')->nullable();
+            $table->integer('approval_status')->default(0);
+            $table->timestamp('approval_date')->nullable();
+            $table->timestamp('rejected_date')->nullable();
             $table->timestamps();
         });
     }

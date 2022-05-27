@@ -51,11 +51,23 @@ class TransactionPolicy extends AbstractPolicy
      * @param  \App\Models\User  $user
      * @return bool
      */
-    public function spend(User $user)
+    public function spendOwnMoney(User $user)
     {
         $permissionId = $user->permissions->toArray()[0]['permission_id'];
 
         return $this->isChildOrHigher($permissionId);
+    }
+
+    /**
+     *
+     * @param  \App\Models\User  $user
+     * @return bool
+     */
+    public function spendOtherMoney(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+
+        return $this->isParent($permissionId);
     }
 
     /**

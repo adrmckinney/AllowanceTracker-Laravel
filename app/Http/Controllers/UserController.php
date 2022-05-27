@@ -102,6 +102,29 @@ class UserController extends Controller
         }
     }
 
+    public function deleteUser(Request $request, $id)
+    {
+        if ($request->user()->id === (int) $id) {
+            if ($request->user()->cannot('deleteSelf', User::class)) {
+                abort(403, 'You do not have access to delete this user');
+            };
+
+            $user = $this->getUserById($id);
+            $user->delete();
+
+            return $user;
+        } else {
+            if ($request->user()->cannot('deleteOther', User::class)) {
+                abort(403, 'You do not have access to delete this user');
+            };
+
+            $user = $this->getUserById($id);
+            $user->delete();
+
+            return $user;
+        }
+    }
+
     public static function getUserById($id)
     {
         return User::find($id);

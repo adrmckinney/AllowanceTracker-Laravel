@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Data\Enums\TransactionTypes;
+use App\Data\Enums\UserChoreApprovalStatuses;
 use App\Data\Traits\UserTrait;
 use App\Models\Transaction;
 use App\Types\Transactions\TransactionType;
@@ -19,13 +20,13 @@ class TransactionController extends Controller
         $this->userController = $userController;
     }
 
-    public function createTransaction(TransactionType $transaction)
+    public function updateWallet($transaction): void
     {
-        $createTransaction = Transaction::create(
-            $transaction->toCreateArray()
-        );
-
         $user = $this->findUser($transaction->user_id);
+
+        if (!!$transaction->transfer_passive_user_id) {
+            $transferPassiveUser = $this->findUser($transaction->transfer_passive_user_id);
+        }
 
         switch ($transaction->transaction_type) {
             case TransactionTypes::$DEPOSIT:
@@ -35,13 +36,16 @@ class TransactionController extends Controller
                 $this->removeMoneyFromWallet($user, $transaction->transaction_amount);
                 break;
             case TransactionTypes::$TRANSFER_DEPOSIT:
-            case TransactionTypes::$TRANSFER_WITHDRAW:
                 $this->addMoneyToWallet($user, $transaction->transaction_amount);
+                $this->removeMoneyFromWallet($transferPassiveUser, $transaction->transaction_amount);
+                break;
+            case TransactionTypes::$TRANSFER_WITHDRAW:
                 $this->removeMoneyFromWallet($user, $transaction->transaction_amount);
+                $this->addMoneyToWallet($transferPassiveUser, $transaction->transaction_amount);
                 break;
         }
 
-        return $createTransaction;
+        // return $createTransaction;
     }
 
     public function getTransaction(Request $request, $id)
@@ -62,15 +66,94 @@ class TransactionController extends Controller
 
     public function spendTransaction(Request $request)
     {
-        if ($request->user()->cannot('spend', Transaction::class)) {
-            abort(403, "You do not have access to spend money");
+        switch ($request->transaction_type) {
+            case TransactionTypes::$DEPOSIT:
+            case TransactionTypes::$WITHDRAW:
+                $this->checkPolicyPermissions($request);
+
+                [$difference, $isOverdraft] = $this->checkTransactionPermissions($request);
+
+                if ($isOverdraft) {
+                    // create transaction but do not update wallet
+                    // update transaction to set the request
+                    // return json response 'request pending'
+                    // once approval is given then update wallet
+                    // if rejected then delete transaction (should be soft delete)
+                    $transaction = $this->createTransaction($request);
+                    $transaction = $this->requestApproval($request, $transaction);
+                    dump('$transaction', $transaction);
+                } else {
+                    $transaction = $this->createTransaction($request);
+                    $this->updateWallet($transaction);
+
+                    return $transaction;
+                }
+
+            case TransactionTypes::$TRANSFER_DEPOSIT:
+            case TransactionTypes::$TRANSFER_WITHDRAW:
+                $transaction = $this->createTransaction($request);
+                $this->updateWallet($transaction);
+
+                return $transaction;
+        }
+    }
+
+    public function createTransaction($request)
+    {
+        $newTransaction = new TransactionType($request->input());
+        return Transaction::create($newTransaction->toCreateArray());
+    }
+
+    public function checkTransactionPermissions($request)
+    {
+        $user = $this->findUser($request->user_id);
+
+        if (!!$request->transfer_passive_user_id) {
+            $transferPassiveUser = $this->findUser($request->transfer_passive_user_id);
         }
 
-        $newTransaction = new TransactionType($request->input());
+        // transfer-Deposit = passive permission needed
+        // transfer withraw more than have in wallet = parent permission
+        // transfer-deposit with withdraw of more than in wallet = passive and parent permissions
 
-        $createTransaction = Transaction::create($newTransaction->toCreateArray());
 
-        return $createTransaction;
+        // spending more than have in wallet = parent permission
+        $difference = $user->wallet - $request->transaction_amount;
+        $isOverdraft = $difference < 0;
+
+        return [$difference, $isOverdraft];
+    }
+
+    public function checkPolicyPermissions($request)
+    {
+        if ($request->user()->id === $request->user_id) {
+            if ($request->user()->cannot('spendOwnMoney', Transaction::class)) {
+                abort(403, "You do not have access to spend money");
+            }
+        } else {
+            if ($request->user()->cannot('spendOtherMoney', Transaction::class)) {
+                abort(403, "You do not have access to spend money");
+            }
+        }
+    }
+
+    public function requestApproval($request, $transaction)
+    {
+
+        $transaction = $this->handleApprovalRequest($request, $transaction);
+
+        $transaction->save();
+
+        return $transaction;
+    }
+
+    public function handleApprovalRequest($request, $transaction)
+    {
+        $transaction['approval_requested'] = $request->approval_requested;
+        $transaction['approval_request_date'] = date('Y-m-d H:i:s', time());
+        $transaction['approval_status'] = UserChoreApprovalStatuses::$PENDING;
+
+        return $transaction;
     }
 
     public function getTransactionById($id)

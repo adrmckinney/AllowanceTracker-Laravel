@@ -11,8 +11,14 @@ class TransactionType extends BaseType
         'id',
         'user_id',
         'chore_id',
+        'transfer_passive_user_id',
         'transaction_amount',
-        'transaction_type'
+        'transaction_type',
+        'approval_requested',
+        'approval_request_date',
+        'approval_status',
+        'approval_date',
+        'rejected_date'
     ];
 
     public function toCreateArray(): array
@@ -21,8 +27,14 @@ class TransactionType extends BaseType
             'id',
             'user_id',
             'chore_id',
+            'transfer_passive_user_id',
             'transaction_amount',
-            'transaction_type'
+            'transaction_type',
+            'approval_requested',
+            'approval_request_date',
+            'approval_status',
+            'approval_date',
+            'rejected_date'
         ]);
     }
 }

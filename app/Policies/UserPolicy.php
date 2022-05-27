@@ -52,6 +52,28 @@ class UserPolicy extends AbstractPolicy
     }
 
     /**
+     *
+     * @param  \App\Models\User
+     * @return bool
+     */
+    public function deleteSelf(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+        return $this->isChildOrHigher($permissionId);
+    }
+
+    /**
+     *
+     * @param  \App\Models\User
+     * @return bool
+     */
+    public function deleteOther(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+        return $this->isParent($permissionId);
+    }
+
+    /**
      * Determine if user can update user wallet.
      *
      * @param  \App\Models\User
