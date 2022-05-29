@@ -63,6 +63,7 @@ Route::put('/user/permission/update', [UserPermissionController::class, 'updateP
 Route::get('/transaction/{id}', [TransactionController::class, 'getTransaction'])->middleware('auth');
 Route::get('/transactions', [TransactionController::class, 'getTransactionsList'])->middleware('auth');
 Route::post('/transaction/spend', [TransactionController::class, 'spendTransaction'])->middleware('auth');
+Route::put('/transaction/approval', [TransactionController::class, 'approveTransaction'])->middleware('auth');
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {
     /**

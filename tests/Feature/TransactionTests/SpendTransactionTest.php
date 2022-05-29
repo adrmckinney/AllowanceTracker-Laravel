@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\UserTests;
 
+use App\Data\Enums\TransactionApprovalStatuses;
 use App\Data\Enums\TransactionTypes;
 use App\Models\Chore;
 use App\Models\Transaction;
@@ -21,65 +22,72 @@ class SpendTransactionTest extends APITestCase
         $this->user2 = User::factory()->create();
     }
 
-    /** @test */
-    public function admin_can_spend_money_of_child()
-    {
-        $this->initAdminUser();
-        $this->canSpendMoney();
-    }
+    // /** @test */
+    // public function admin_can_spend_money_of_child()
+    // {
+    //     $this->initAdminUser();
+    //     $this->canSpendMoney();
+    // }
+
+    // /** @test */
+    // public function parent_can_spend_money_of_child()
+    // {
+    //     $this->initParentUser();
+    //     $this->canSpendMoney();
+    // }
+
+    // /** @test */
+    // public function child_can_spend_own_money()
+    // {
+    //     $this->initChildUser();
+    //     $this->canSpendMoney('self');
+    // }
+
+    // /** @test */
+    // public function child_can_request_to_spend_more_money_than_they_have()
+    // {
+    //     $this->initChildUser();
+    //     $this->canRequestSpend('self');
+    // }
 
     /** @test */
-    public function parent_can_spend_money_of_child()
+    public function parent_can_approve_spend_request()
     {
         $this->initParentUser();
-        $this->canSpendMoney();
+        $this->canApproveSpend();
     }
 
-    /** @test */
-    public function child_can_spend_own_money()
-    {
-        $this->initChildUser();
-        $this->canSpendMoney('self');
-    }
+    // /** @test */
+    // public function child_can_transfer_own_money()
+    // {
+    //     $this->initChildUser();
+    //     $this->canTransferMoney();
+    // }
 
-    /** @test */
-    public function child_can_request_to_spend_more_money_than_they_have()
-    {
-        $this->initChildUser();
-        $this->canRequestSpend('self');
-    }
+    // /** @test */
+    // public function parent_can_transfer_between_children()
+    // {
+    //     $this->initChildUser();
+    //     $this->canTransferMoney(null, 'parent');
+    // }
 
-    /** @test */
-    public function child_can_transfer_own_money()
-    {
-        $this->initChildUser();
-        $this->canTransferMoney();
-    }
+    // /** @test */
+    // public function no_access_user_cannot_spend_own_money()
+    // {
+    //     $this->initNoAccessUser();
+    //     $this->cannotSpendMoney('self');
+    // }
 
-    /** @test */
-    public function parent_can_transfer_between_children()
-    {
-        $this->initChildUser();
-        $this->canTransferMoney(null, 'parent');
-    }
+    // /** @test */
+    // public function child_user_cannot_spend_money_of_another_child()
+    // {
+    //     $this->initChildUser();
+    //     $this->cannotSpendMoney();
+    // }
 
-    /** @test */
-    public function no_access_user_cannot_spend_own_money()
-    {
-        $this->initNoAccessUser();
-        $this->cannotSpendMoney('self');
-    }
-
-    /** @test */
-    public function child_user_cannot_spend_money_of_another_child()
-    {
-        $this->initChildUser();
-        $this->cannotSpendMoney();
-    }
-
-    // child cannot spend more than they have
-    // or child needs approval to spend more than they have
-    // parent can spend child money
+    // child can request to spend more than they have  √
+    // parent can approve request
+    // child can request transfer from another child
 
 
     private function canSpendMoney($target = null)
@@ -105,6 +113,7 @@ class SpendTransactionTest extends APITestCase
         $response->assertJsonPath('user_id', $input['user_id'])
             ->assertJsonPath('transaction_amount', $input['transaction_amount'])
             ->assertJsonPath('transaction_type', $input['transaction_type'])
+            ->assertJsonPath('approval_status', TransactionApprovalStatuses::$NONE)
             ->assertJsonMissing(['chore_id']);
         $this->assertEquals($userWalletBeforeTransaction - $input['transaction_amount'], $userWalletAfterTransaction);
     }
@@ -128,12 +137,16 @@ class SpendTransactionTest extends APITestCase
         $targetUser->refresh();
         $userWalletAfterTransaction = $targetUser->wallet;
         dump('wallet after', $userWalletAfterTransaction);
+
         $response->assertStatus(201);
         $response->assertJsonPath('user_id', $input['user_id'])
             ->assertJsonPath('transaction_amount', $input['transaction_amount'])
             ->assertJsonPath('transaction_type', $input['transaction_type'])
+            ->assertJsonPath('approval_requested', true)
+            ->assertJsonPath('approval_status', TransactionApprovalStatuses::$PENDING)
             ->assertJsonMissing(['chore_id']);
-        $this->assertEquals($userWalletBeforeTransaction - $input['transaction_amount'], $userWalletAfterTransaction);
+        $this->assertEquals($userWalletBeforeTransaction, $userWalletAfterTransaction);
+        $this->assertNotNull($response->baseResponse->original['approval_request_date']);
     }
 
     private function canTransferMoney($target = null, $parent = null)
@@ -200,5 +213,25 @@ class SpendTransactionTest extends APITestCase
 
         $response->assertStatus(403);
         $this->assertEquals('You do not have access to spend money', $errorMessage);
+    }
+
+    public function canApproveSpend()
+    {
+        // create child user 
+        // create a transaction approval request with that child
+        $transaction = Transaction::factory()->create([
+            'approval_requested' => true,
+            'approval_request_date' => date('Y-m-d H:i:s', time()),
+            'approval_status' => TransactionApprovalStatuses::$PENDING
+        ]);
+
+        $input = [
+            'id' => $transaction->id,
+            'approval_status' => TransactionApprovalStatuses::$APPROVED
+        ];
+
+        $response = $this->urlConfig('put', 'transaction/approval', $input);
+        // there should not be a chore with this response. check trans factory
+        $this->echoResponse($response);
     }
 }
