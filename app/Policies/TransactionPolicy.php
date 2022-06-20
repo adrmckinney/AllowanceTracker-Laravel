@@ -72,6 +72,30 @@ class TransactionPolicy extends AbstractPolicy
 
     /**
      *
+     * @param  \App\Models\User  $user
+     * @return bool
+     */
+    public function approveSpend(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+
+        return $this->isParent($permissionId);
+    }
+
+    /**
+     *
+     * @param  \App\Models\User  $user
+     * @return bool
+     */
+    public function approveTransfer(User $user)
+    {
+        $permissionId = $user->permissions->toArray()[0]['permission_id'];
+
+        return $this->isChild($permissionId);
+    }
+
+    /**
+     *
      * @param  \App\Models\User $user
      * @return bool
      */

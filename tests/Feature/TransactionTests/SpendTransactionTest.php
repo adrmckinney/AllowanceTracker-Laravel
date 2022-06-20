@@ -3,6 +3,8 @@
 namespace Tests\Feature\UserTests;
 
 use App\Data\Enums\TransactionApprovalStatuses;
+use App\Data\Enums\TransactionApprovalType;
+use App\Data\Enums\TransactionApprovalTypes;
 use App\Data\Enums\TransactionTypes;
 use App\Models\Chore;
 use App\Models\Transaction;
@@ -22,33 +24,33 @@ class SpendTransactionTest extends APITestCase
         $this->user2 = User::factory()->create();
     }
 
-    // /** @test */
-    // public function admin_can_spend_money_of_child()
-    // {
-    //     $this->initAdminUser();
-    //     $this->canSpendMoney();
-    // }
+    /** @test */
+    public function admin_can_spend_money_of_child()
+    {
+        $this->initAdminUser();
+        $this->canSpendMoney();
+    }
 
-    // /** @test */
-    // public function parent_can_spend_money_of_child()
-    // {
-    //     $this->initParentUser();
-    //     $this->canSpendMoney();
-    // }
+    /** @test */
+    public function parent_can_spend_money_of_child()
+    {
+        $this->initParentUser();
+        $this->canSpendMoney();
+    }
 
-    // /** @test */
-    // public function child_can_spend_own_money()
-    // {
-    //     $this->initChildUser();
-    //     $this->canSpendMoney('self');
-    // }
+    /** @test */
+    public function child_can_spend_own_money()
+    {
+        $this->initChildUser();
+        $this->canSpendMoney('self');
+    }
 
-    // /** @test */
-    // public function child_can_request_to_spend_more_money_than_they_have()
-    // {
-    //     $this->initChildUser();
-    //     $this->canRequestSpend('self');
-    // }
+    /** @test */
+    public function child_can_request_to_spend_more_money_than_they_have()
+    {
+        $this->initChildUser();
+        $this->canRequestSpend('self');
+    }
 
     /** @test */
     public function parent_can_approve_spend_request()
@@ -57,37 +59,104 @@ class SpendTransactionTest extends APITestCase
         $this->canApproveSpend();
     }
 
-    // /** @test */
-    // public function child_can_transfer_own_money()
-    // {
-    //     $this->initChildUser();
-    //     $this->canTransferMoney();
-    // }
+    /** @test */
+    public function child_cannot_approve_spend_request()
+    {
+        $this->initChildUser();
+        $this->cannotApproveSpend();
+    }
 
-    // /** @test */
-    // public function parent_can_transfer_between_children()
-    // {
-    //     $this->initChildUser();
-    //     $this->canTransferMoney(null, 'parent');
-    // }
+    /** @test */
+    public function child_can_transfer_own_money()
+    {
+        $this->initChildUser();
+        $this->canTransferMoney();
+    }
 
-    // /** @test */
-    // public function no_access_user_cannot_spend_own_money()
-    // {
-    //     $this->initNoAccessUser();
-    //     $this->cannotSpendMoney('self');
-    // }
+    /** @test */
+    public function parent_can_transfer_between_children()
+    {
+        $this->initChildUser();
+        $this->canTransferMoney(null, 'parent');
+    }
 
-    // /** @test */
-    // public function child_user_cannot_spend_money_of_another_child()
-    // {
-    //     $this->initChildUser();
-    //     $this->cannotSpendMoney();
-    // }
+    /** @test */
+    public function child_can_approve_transfer_request()
+    {
+        $this->initChildUser();
+        $this->canApproveTransfer(
+            TransactionTypes::$TRANSFER_DEPOSIT,
+            TransactionApprovalTypes::$TRANSFER_APPROVAL_NEEDED,
+            500
+        );
+    }
 
-    // child can request to spend more than they have  √
-    // parent can approve request
-    // child can request transfer from another child
+    /** @test */
+    public function parent_can_approve_overdraft_of_transfer_withdraw_request()
+    {
+        $this->initParentUser();
+        $this->canApproveTransfer(
+            TransactionTypes::$TRANSFER_WITHDRAW,
+            TransactionApprovalTypes::$OVERDRAFT_APPROVAL_NEEDED,
+            2000
+        );
+    }
+
+    /** @test */
+    public function parent_can_approve_overdraft_of_transfer_deposit_request()
+    {
+        $this->initParentUser();
+        $this->canApproveOneApprovalOfTwoApprovalTransfer(
+            TransactionApprovalTypes::$TRANSFER_APPROVAL_NEEDED
+        );
+    }
+
+    /** @test */
+    public function child_can_approve_overdraft_of_transfer_deposit_request()
+    {
+        $this->initChildUser();
+        $this->canApproveOneApprovalOfTwoApprovalTransfer(
+            TransactionApprovalTypes::$OVERDRAFT_APPROVAL_NEEDED
+        );
+    }
+
+    /** @test */
+    public function parent_cannot_approve_transfer_request()
+    {
+        $this->initParentUser();
+        $this->cannotApproveTransfer();
+    }
+
+    /** @test */
+    public function child_can_request_transfer_between_children()
+    {
+        $this->initChildUser();
+        $this->canRequestTransfer(500);
+    }
+
+    /** @test */
+    public function child_can_request_transfer_between_children_for_more_than_second_child_has_in_wallet()
+    {
+        $this->initChildUser();
+        $this->canRequestTransfer(2000);
+    }
+
+    /** @test */
+    public function no_access_user_cannot_spend_own_money()
+    {
+        $this->initNoAccessUser();
+        $this->cannotSpendMoney('self');
+    }
+
+    /** @test */
+    public function child_user_cannot_spend_money_of_another_child()
+    {
+        $this->initChildUser();
+        $this->cannotSpendMoney();
+    }
+
+
+    // reject approval
 
 
     private function canSpendMoney($target = null)
@@ -113,6 +182,7 @@ class SpendTransactionTest extends APITestCase
         $response->assertJsonPath('user_id', $input['user_id'])
             ->assertJsonPath('transaction_amount', $input['transaction_amount'])
             ->assertJsonPath('transaction_type', $input['transaction_type'])
+            ->assertJsonPath('transaction_approval_type', TransactionApprovalTypes::$NO_APPROVAL_NEEDED)
             ->assertJsonPath('approval_status', TransactionApprovalStatuses::$NONE)
             ->assertJsonMissing(['chore_id']);
         $this->assertEquals($userWalletBeforeTransaction - $input['transaction_amount'], $userWalletAfterTransaction);
@@ -136,17 +206,47 @@ class SpendTransactionTest extends APITestCase
 
         $targetUser->refresh();
         $userWalletAfterTransaction = $targetUser->wallet;
-        dump('wallet after', $userWalletAfterTransaction);
 
         $response->assertStatus(201);
         $response->assertJsonPath('user_id', $input['user_id'])
             ->assertJsonPath('transaction_amount', $input['transaction_amount'])
             ->assertJsonPath('transaction_type', $input['transaction_type'])
+            ->assertJsonPath('transaction_approval_type', TransactionApprovalTypes::$OVERDRAFT_APPROVAL_NEEDED)
             ->assertJsonPath('approval_requested', true)
             ->assertJsonPath('approval_status', TransactionApprovalStatuses::$PENDING)
             ->assertJsonMissing(['chore_id']);
         $this->assertEquals($userWalletBeforeTransaction, $userWalletAfterTransaction);
         $this->assertNotNull($response->baseResponse->original['approval_request_date']);
+    }
+
+    private function canRequestTransfer($amount)
+    {
+        $user = $this->authUser;
+
+        $userWalletBeforeTransaction = $user->wallet;
+
+        $input = [
+            "user_id" => $user->id,
+            'transfer_passive_user_id' => $this->user->id,
+            'transaction_amount' => $amount,
+            'transaction_type' => TransactionTypes::$TRANSFER_DEPOSIT
+        ];
+
+        $response = $this->urlConfig('post', 'transaction/spend', $input);
+
+        $user->refresh();
+        $userWalletAfterTransaction = $user->wallet;
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('transaction.user_id', $this->authUser->id)
+            ->assertJsonPath('transaction.transfer_passive_user_id', $input['transfer_passive_user_id'])
+            ->assertJsonPath('transaction.transaction_amount', $input['transaction_amount'])
+            ->assertJsonPath('transaction.transaction_type', $input['transaction_type'])
+            ->assertJsonPath('transaction.approval_requested', true)
+            ->assertJsonPath('transaction.approval_status', TransactionApprovalStatuses::$PENDING)
+            ->assertJsonMissing(['transaction.chore_id']);
+        $this->assertEquals($userWalletBeforeTransaction, $userWalletAfterTransaction);
+        $this->assertNotNull($response->baseResponse->original['transaction']['approval_request_date']);
     }
 
     private function canTransferMoney($target = null, $parent = null)
@@ -163,19 +263,16 @@ class SpendTransactionTest extends APITestCase
             $targetUser = $this->user2;
         }
 
-        $transferToUser = $target === 'self'
+        $passiveUser = $target === 'self'
             ? $this->user
             : $this->authUser;
 
-        dump('targetUser', $targetUser->id);
-        dump('$transferToUser', $transferToUser->id);
-
         $targetUserWalletBeforeTransaction = $targetUser->wallet;
-        $passiveUserWalletBeforeTransaction = $transferToUser->wallet;
+        $passiveUserWalletBeforeTransaction = $passiveUser->wallet;
 
         $input = [
             "user_id" => $targetUser->id,
-            'transfer_passive_user_id' => $transferToUser->id,
+            'transfer_passive_user_id' => $passiveUser->id,
             'transaction_amount' => 1000,
             'transaction_type' => $transferType
         ];
@@ -183,9 +280,9 @@ class SpendTransactionTest extends APITestCase
         $response = $this->urlConfig('post', 'transaction/spend', $input);
 
         $targetUser->refresh();
-        $transferToUser->refresh();
+        $passiveUser->refresh();
         $targetUserWalletAfterTransaction = $targetUser->wallet;
-        $passiveUserWalletAfterTransaction = $transferToUser->wallet;
+        $passiveUserWalletAfterTransaction = $passiveUser->wallet;
 
         $response->assertStatus(201);
         $response->assertJsonPath('user_id', $input['user_id'])
@@ -217,13 +314,14 @@ class SpendTransactionTest extends APITestCase
 
     public function canApproveSpend()
     {
-        // create child user 
-        // create a transaction approval request with that child
-        $transaction = Transaction::factory()->create([
-            'approval_requested' => true,
-            'approval_request_date' => date('Y-m-d H:i:s', time()),
-            'approval_status' => TransactionApprovalStatuses::$PENDING
-        ]);
+        $userWalletBeforeApproval = $this->user->wallet;
+
+        $transaction = $this->createPendingTransaction(
+            $this->user->id,
+            TransactionTypes::$WITHDRAW,
+            TransactionApprovalTypes::$NO_APPROVAL_NEEDED,
+            2000
+        );
 
         $input = [
             'id' => $transaction->id,
@@ -231,7 +329,132 @@ class SpendTransactionTest extends APITestCase
         ];
 
         $response = $this->urlConfig('put', 'transaction/approval', $input);
-        // there should not be a chore with this response. check trans factory
-        $this->echoResponse($response);
+
+        $this->user->refresh();
+        $userWalletAfterApproval = $this->user->wallet;
+
+        $response->assertStatus(200)
+            ->assertJsonPath('approval_status', TransactionApprovalStatuses::$APPROVED);
+        $this->assertEquals($userWalletBeforeApproval - $transaction['transaction_amount'], $userWalletAfterApproval);
+        $this->assertNotNull($response->baseResponse->original['approval_date']);
+        $this->assertNull($response->baseResponse->original['rejected_date']);
+    }
+
+    public function canApproveTransfer($transferType, $transactionApprovalType, $amount)
+    {
+        $userWalletBeforeApproval = $this->authUser->wallet;
+        $passiveUserWalletBeforeApproval = $this->user->wallet;
+
+        $transaction = $this->createPendingTransaction(
+            $this->authUser,
+            $transferType,
+            $transactionApprovalType,
+            $amount,
+            $this->user->id
+        );
+
+        $input = [
+            'id' => $transaction->id,
+            'approval_status' => TransactionApprovalStatuses::$APPROVED
+        ];
+
+        $response = $this->urlConfig('put', 'transaction/approval', $input);
+
+        $this->authUser->refresh();
+        $this->user->refresh();
+        $userWalletAfterApproval = $this->authUser->wallet;
+        $passiveUserWalletAfterApproval = $this->user->wallet;
+
+        $response->assertStatus(200)
+            ->assertJsonPath('approval_status', TransactionApprovalStatuses::$APPROVED)
+            ->assertJsonPath('transaction_approval_type', TransactionApprovalTypes::$APPROVED);
+        $this->assertEquals(
+            $userWalletBeforeApproval - $transaction['transaction_amount'],
+            $userWalletAfterApproval
+        );
+        $this->assertEquals(
+            $passiveUserWalletBeforeApproval + $transaction['transaction_amount'],
+            $passiveUserWalletAfterApproval
+        );
+        $this->assertNotNull($response->baseResponse->original['approval_date']);
+        $this->assertNull($response->baseResponse->original['rejected_date']);
+    }
+
+    public function cannotApproveSpend()
+    {
+        $transaction = $this->createPendingTransaction(
+            $this->user->id,
+            TransactionTypes::$WITHDRAW,
+            TransactionApprovalTypes::$NO_APPROVAL_NEEDED,
+            2000
+        );
+
+        $input = [
+            'id' => $transaction->id,
+            'approval_status' => TransactionApprovalStatuses::$APPROVED
+        ];
+
+        $response = $this->urlConfig('put', 'transaction/approval', $input);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(403);
+        $this->assertEquals('You do not have access to approve spend', $errorMessage);
+    }
+
+    public function canApproveOneApprovalOfTwoApprovalTransfer($expectedRemainingApprovalType)
+    {
+        $userWalletBeforeApproval = $this->authUser->wallet;
+        $passiveUserWalletBeforeApproval = $this->user->wallet;
+
+        $transaction = $this->createPendingTransaction(
+            $this->authUser,
+            TransactionTypes::$TRANSFER_DEPOSIT,
+            TransactionApprovalTypes::$OVERDRAFT_AND_TRANSFER_APPROVAL_NEEDED,
+            2000,
+            $this->user->id
+        );
+
+        $input = [
+            'id' => $transaction->id,
+            'approval_status' => TransactionApprovalStatuses::$APPROVED
+        ];
+
+        $response = $this->urlConfig('put', 'transaction/approval', $input);
+
+        $this->authUser->refresh();
+        $this->user->refresh();
+        $userWalletAfterApproval = $this->authUser->wallet;
+        $passiveUserWalletAfterApproval = $this->user->wallet;
+
+        $response->assertStatus(200)
+            ->assertJsonPath('transaction.approval_status', TransactionApprovalStatuses::$PENDING)
+            ->assertJsonPath('transaction.transaction_approval_type', $expectedRemainingApprovalType);
+        $this->assertEquals($userWalletBeforeApproval, $userWalletAfterApproval);
+        $this->assertEquals($passiveUserWalletBeforeApproval, $passiveUserWalletAfterApproval);
+        $this->assertNotNull($response->baseResponse->original['transaction']['approval_date']);
+        $this->assertNull($response->baseResponse->original['transaction']['rejected_date']);
+    }
+
+    public function cannotApproveTransfer()
+    {
+        $transaction = $this->createPendingTransaction(
+            $this->authUser,
+            TransactionTypes::$TRANSFER_DEPOSIT,
+            TransactionApprovalTypes::$TRANSFER_APPROVAL_NEEDED,
+            500
+        );
+
+        $input = [
+            'id' => $transaction->id,
+            'approval_status' => TransactionApprovalStatuses::$APPROVED
+        ];
+
+        $response = $this->urlConfig('put', 'transaction/approval', $input);
+
+        $errorMessage = $response->exception->getMessage();
+
+        $response->assertStatus(403);
+        $this->assertEquals('A parent does not have access to approve this transfer', $errorMessage);
     }
 }

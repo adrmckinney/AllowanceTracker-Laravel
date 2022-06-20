@@ -33,6 +33,7 @@ return new class extends Migration
             $table->integer('transaction_amount')->default(0);
             $table->unsignedInteger('transaction_type');
 
+            $table->integer('transaction_approval_type')->nullable();
             $table->boolean('approval_requested')->default(0);
             $table->timestamp('approval_request_date')->nullable();
             $table->integer('approval_status')->default(0);

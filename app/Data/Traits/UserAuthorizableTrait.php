@@ -11,6 +11,11 @@ trait UserAuthorizableTrait
         return $permissionId === PermissionTypes::$PARENT;
     }
 
+    protected function isChild($permissionId)
+    {
+        return $permissionId === PermissionTypes::$CHILD;
+    }
+
     protected function isChildOrHigher($permissionId)
     {
         return ($permissionId === PermissionTypes::$CHILD

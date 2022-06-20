@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Data\Enums\TransactionApprovalStatuses;
+use App\Data\Enums\TransactionApprovalTypes;
 use App\Data\Enums\TransactionTypes;
 use App\Models\Chore;
 use App\Models\User;
@@ -25,6 +26,7 @@ class TransactionFactory extends Factory
             'chore_id' => Chore::factory(),
             'transaction_amount' => 1000,
             'transaction_type' => TransactionTypes::$WITHDRAW,
+            'transaction_approval_type' => TransactionApprovalTypes::$NO_APPROVAL_NEEDED,
             'approval_requested' => false,
             'approval_request_date' => null,
             'approval_status' => TransactionApprovalStatuses::$NONE,
