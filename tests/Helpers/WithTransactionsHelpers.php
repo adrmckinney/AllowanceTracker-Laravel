@@ -29,4 +29,26 @@ trait WithTransactionsHelpers
             'approval_status' => TransactionApprovalStatuses::$PENDING
         ]);
     }
+
+    public function createRejectedTransaction(
+        $userId,
+        $transactionType,
+        $transactionApprovalType,
+        $amount,
+        $passiveUserId = null
+    ) {
+        return Transaction::factory()->create([
+            'user_id' => $userId,
+            'chore_id' => null,
+            'transfer_passive_user_id' => $passiveUserId,
+            'transaction_type' => $transactionType,
+            'transaction_approval_type' => $transactionApprovalType,
+            'transaction_amount' => $amount,
+            'approval_requested' => true,
+            'approval_request_date' => date('Y-m-d H:i:s', time()),
+            'approval_status' => TransactionApprovalStatuses::$REJECTED,
+            'rejection_reason' => 'Because I do not want to send my money to you',
+            'rejected_date' => date('Y-m-d H:i:s', time())
+        ]);
+    }
 }

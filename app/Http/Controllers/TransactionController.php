@@ -79,9 +79,6 @@ class TransactionController extends Controller
                 if (
                     $request->transaction_approval_type === TransactionApprovalTypes::$OVERDRAFT_APPROVAL_NEEDED
                 ) {
-
-                    // TODO return json response 'request pending'
-                    // TODO if rejected then delete transaction (should be soft delete)
                     $transaction = $this->createTransaction($request);
                     $transaction = $this->handleApprovalRequest($transaction);
 
@@ -115,6 +112,8 @@ class TransactionController extends Controller
 
     public function approveTransaction(Request $request)
     {
+        $transactionData = new TransactionType($request->input());
+        $transactionData->id = $request->id;
         $user = $request->user();
         $transaction = $this->getTransactionById($request->id);
         $this->checkApprovalPolicies($request, $transaction);
@@ -127,12 +126,12 @@ class TransactionController extends Controller
                     $transaction->transaction_approval_type === TransactionApprovalTypes::$APPROVED ||
                     $transaction->transaction_approval_type === TransactionApprovalTypes::$NO_APPROVAL_NEEDED
                 ) {
-                    $transaction['approval_status'] = $request->approval_status;
                     $transaction['approval_date'] = date('Y-m-d H:i:s', time());
-                    $transaction->save();
+                    $updatedTransaction = $this->updateTransaction($transaction, $transactionData);
 
                     $this->updateWallet($transaction);
-                    return $transaction;
+
+                    return $updatedTransaction;
                 } else {
                     $transaction['approval_date'] = date('Y-m-d H:i:s', time());
                     $transaction->save();
@@ -143,6 +142,24 @@ class TransactionController extends Controller
                         'message' => $this->getApprovalMessage($transaction, $passiveUser)
                     ];
                 }
+            case TransactionApprovalStatuses::$REJECTED:
+                return [
+                    'transaction' => $transaction,
+                    'message' => 'Transaction cannot be approved because it has already been rejected'
+                ];
+        }
+    }
+
+    public function rejectTransaction(Request $request)
+    {
+        $transactionData = new TransactionType($request->input());
+        $transactionData->id = $request->id;
+
+        $transaction = $this->getTransactionById($request->id);
+        $this->checkApprovalPolicies($request, $transaction);
+
+        if ($request->approval_status === TransactionApprovalStatuses::$REJECTED) {
+            return $this->updateTransaction($transaction, $transactionData);
         }
     }
 
@@ -150,6 +167,14 @@ class TransactionController extends Controller
     {
         $newTransaction = new TransactionType($request->input());
         return Transaction::create($newTransaction->toCreateArray());
+    }
+
+    public function updateTransaction(Transaction $transaction, TransactionType $transactionData)
+    {
+        $transaction->fill($transactionData->toUpdateArray());
+        $transaction->save();
+
+        return $transaction;
     }
 
     public function getTransactionById($id)

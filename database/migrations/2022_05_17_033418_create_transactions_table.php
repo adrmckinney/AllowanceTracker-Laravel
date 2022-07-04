@@ -38,6 +38,7 @@ return new class extends Migration
             $table->timestamp('approval_request_date')->nullable();
             $table->integer('approval_status')->default(0);
             $table->timestamp('approval_date')->nullable();
+            $table->text('rejection_reason')->nullable();
             $table->timestamp('rejected_date')->nullable();
             $table->timestamps();
         });

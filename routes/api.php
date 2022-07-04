@@ -64,6 +64,7 @@ Route::get('/transaction/{id}', [TransactionController::class, 'getTransaction']
 Route::get('/transactions', [TransactionController::class, 'getTransactionsList'])->middleware('auth');
 Route::post('/transaction/spend', [TransactionController::class, 'spendTransaction'])->middleware('auth');
 Route::put('/transaction/approval', [TransactionController::class, 'approveTransaction'])->middleware('auth');
+Route::put('/transaction/reject', [TransactionController::class, 'rejectTransaction'])->middleware('auth');
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {
     /**

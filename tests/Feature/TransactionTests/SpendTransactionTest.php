@@ -155,8 +155,30 @@ class SpendTransactionTest extends APITestCase
         $this->cannotSpendMoney();
     }
 
+    /** @test */
+    public function child_user_can_reject_transfer_request()
+    {
+        $this->initChildUser();
+        $this->canRejectTransferRequest();
+    }
+
+    /** @test */
+    public function parent_user_can_reject_transfer_request()
+    {
+        $this->initParentUser();
+        $this->canRejectTransferRequest();
+    }
+
+    /** @test */
+    public function child_user_cannot_approve_rejected_transfer_request()
+    {
+        $this->initChildUser();
+        $this->cannotApproveRejectedTransferRequest();
+    }
+
 
     // reject approval
+    // cannot approve a rejected invoice
 
 
     private function canSpendMoney($target = null)
@@ -456,5 +478,53 @@ class SpendTransactionTest extends APITestCase
 
         $response->assertStatus(403);
         $this->assertEquals('A parent does not have access to approve this transfer', $errorMessage);
+    }
+
+    public function canRejectTransferRequest()
+    {
+        $transaction = $this->createPendingTransaction(
+            $this->authUser,
+            TransactionTypes::$TRANSFER_DEPOSIT,
+            TransactionApprovalTypes::$OVERDRAFT_AND_TRANSFER_APPROVAL_NEEDED,
+            2000,
+            $this->user->id
+        );
+
+        $input = [
+            'id' => $transaction->id,
+            'approval_status' => TransactionApprovalStatuses::$REJECTED,
+            'rejection_reason' => 'Because I do not want to send my money to you'
+        ];
+
+        $response = $this->urlConfig('put', 'transaction/reject', $input);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('approval_status', TransactionApprovalStatuses::$REJECTED)
+            ->assertJsonPath('rejection_reason', $input['rejection_reason']);
+        $this->assertNull($response->baseResponse->original['rejected_date']);
+    }
+
+    public function cannotApproveRejectedTransferRequest()
+    {
+        $transaction = $this->createRejectedTransaction(
+            $this->authUser,
+            TransactionTypes::$TRANSFER_DEPOSIT,
+            TransactionApprovalTypes::$OVERDRAFT_AND_TRANSFER_APPROVAL_NEEDED,
+            2000,
+            $this->user->id
+        );
+
+        $input = [
+            'id' => $transaction->id,
+            'approval_status' => TransactionApprovalStatuses::$APPROVED,
+        ];
+
+        $response = $this->urlConfig('put', 'transaction/approval', $input);
+        $this->echoResponse($response);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('transaction.approval_status', TransactionApprovalStatuses::$REJECTED)
+            ->assertJsonPath('transaction.rejected_date', $transaction['rejected_date'])
+            ->assertJsonPath('transaction.rejection_reason', $transaction['rejection_reason']);
     }
 }
