@@ -79,12 +79,14 @@ class TransactionController extends Controller
                 if (
                     $request->transaction_approval_type === TransactionApprovalTypes::$OVERDRAFT_APPROVAL_NEEDED
                 ) {
-                    $transaction = $this->createTransaction($request);
+                    $transactionData = new TransactionType($request->input());
+                    $transaction = $this->createTransaction($transactionData);
                     $transaction = $this->handleApprovalRequest($transaction);
 
                     return $transaction;
                 } else {
-                    $transaction = $this->createTransaction($request);
+                    $transactionData = new TransactionType($request->input());
+                    $transaction = $this->createTransaction($transactionData);
                     $transaction = $this->setApprovalStatusToNone($transaction);
 
                     $this->updateWallet($transaction);
@@ -93,13 +95,15 @@ class TransactionController extends Controller
                 }
 
             case TransactionTypes::$TRANSFER_WITHDRAW:
-                $transaction = $this->createTransaction($request);
+                $transactionData = new TransactionType($request->input());
+                $transaction = $this->createTransaction($transactionData);
+
                 $this->updateWallet($transaction);
 
                 return $transaction;
             case TransactionTypes::$TRANSFER_DEPOSIT:
-
-                $transaction = $this->createTransaction($request);
+                $transactionData = new TransactionType($request->input());
+                $transaction = $this->createTransaction($transactionData);
                 $transaction = $this->handleApprovalRequest($transaction);
                 $transferPassiveUser = $this->findUser($request->transfer_passive_user_id);
 
@@ -163,10 +167,11 @@ class TransactionController extends Controller
         }
     }
 
-    public function createTransaction($request)
+    public function createTransaction(TransactionType $transactionData)
     {
-        $newTransaction = new TransactionType($request->input());
-        return Transaction::create($newTransaction->toCreateArray());
+        // $newTransaction = new TransactionType($transactionData);
+
+        return Transaction::create($transactionData->toCreateArray());
     }
 
     public function updateTransaction(Transaction $transaction, TransactionType $transactionData)

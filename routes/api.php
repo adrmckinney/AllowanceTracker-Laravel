@@ -33,38 +33,8 @@ Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEm
 Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm']);
 Route::post('password/reset', [ResetPasswordController::class, 'resetPassword'])->middleware('auth');
 
-Route::get('/me/{id}', [UserController::class, 'getUser'])->middleware('auth');
-Route::get('/users', [UserController::class, 'getUsers'])->middleware('auth');
-Route::put('/user/update', [UserController::class, 'update'])->middleware('auth');
-Route::delete('/user/{id}', [UserController::class, 'deleteUser'])->middleware('auth');
 
-Route::get('/chore/{id}', [ChoreController::class, 'getChore'])->middleware('auth');
-Route::get('/chores', [ChoreController::class, 'getChoreList'])->middleware('auth');
-Route::post('/chore', [ChoreController::class, 'createChore'])->middleware('auth');
-Route::put('/chore', [ChoreController::class, 'updateChore'])->middleware('auth');
-Route::delete('/chore/{id}', [ChoreController::class, 'deleteChore'])->middleware('auth');
-
-Route::get('/user-chore/{id}', [UserChoreController::class, 'getUserChore'])->middleware('auth');
-Route::get("/user/{id}/chores", [UserChoreController::class, 'getUserChores'])->middleware('auth');
-Route::get("/users/chore/{id}", [UserChoreController::class, 'getChoreUsers'])->middleware('auth');
-Route::post('/user/{userId}/chore/{choreId}/add', [UserChoreController::class, 'addChoreToUser'])->middleware('auth');
-Route::put('/user/chore/request', [UserChoreController::class, 'requestApproval'])->middleware('auth');
-Route::put('/user/chore/approve', [UserChoreController::class, 'approveWork'])->middleware('auth');
-Route::delete("/user-chore/{id}/remove", [UserChoreController::class, 'removeChoreFromUser'])->middleware('auth');
-
-Route::get('/permission/{id}', [PermissionsController::class, 'getPermission'])->middleware('auth');
-Route::get('/permissions', [PermissionsController::class, 'getPermissions'])->middleware('auth');
-Route::post('/permission/create', [PermissionsController::class, 'createPermission'])->middleware('auth');
-Route::put('/permission/update', [PermissionsController::class, 'updatePermission'])->middleware('auth');
-
-Route::post('/user/permission/add', [UserPermissionController::class, 'addPermission'])->middleware('auth');
-Route::put('/user/permission/update', [UserPermissionController::class, 'updatePermission'])->middleware('auth');
-
-Route::get('/transaction/{id}', [TransactionController::class, 'getTransaction'])->middleware('auth');
-Route::get('/transactions', [TransactionController::class, 'getTransactionsList'])->middleware('auth');
-Route::post('/transaction/spend', [TransactionController::class, 'spendTransaction'])->middleware('auth');
-Route::put('/transaction/approval', [TransactionController::class, 'approveTransaction'])->middleware('auth');
-Route::put('/transaction/reject', [TransactionController::class, 'rejectTransaction'])->middleware('auth');
+// Route::post('/login', [LoginController::class, 'login'])->middleware('auth');
 
 Route::group(['namespace' => 'App\Http\Controllers'], function () {
     /**
@@ -76,15 +46,12 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
         /**
          * Register Routes
          */
-        Route::get('/register', [RegisterController::class, 'show'])->name('register.show');
-        // Route::post('/register', 'RegisterController@register')->name('register.perform');
         Route::post('/register', [RegisterController::class, 'register']);
 
         /**
          * Login Routes
          */
-        Route::get('/login', [LoginController::class, 'show'])->name('login.show');
-        Route::post('/login', [LoginController::class, 'login'])->name('login.perform');
+        Route::post('/login', [LoginController::class, 'login']);
     });
 
     Route::group(['middleware' => ['auth']], function () {
@@ -92,5 +59,37 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
          * Logout Routes
          */
         // Route::get('/logout', [LogoutController::class, 'logout'])->name('logout.perform');
+        Route::get('/me/{id}', [UserController::class, 'getUser']);
+        Route::get('/users', [UserController::class, 'getUsers']);
+        Route::put('/user/update', [UserController::class, 'update']);
+        Route::delete('/user/{id}', [UserController::class, 'deleteUser']);
+
+        Route::get('/chore/{id}', [ChoreController::class, 'getChore']);
+        Route::get('/chores', [ChoreController::class, 'getChoreList']);
+        Route::post('/chore', [ChoreController::class, 'createChore']);
+        Route::put('/chore', [ChoreController::class, 'updateChore']);
+        Route::delete('/chore/{id}', [ChoreController::class, 'deleteChore']);
+
+        Route::get('/user-chore/{id}', [UserChoreController::class, 'getUserChore']);
+        Route::get("/user/{id}/chores", [UserChoreController::class, 'getUserChores']);
+        Route::get("/users/chore/{id}", [UserChoreController::class, 'getChoreUsers']);
+        Route::post('/user/{userId}/chore/{choreId}/add', [UserChoreController::class, 'addChoreToUser']);
+        Route::put('/user/chore/request', [UserChoreController::class, 'requestApproval']);
+        Route::put('/user/chore/approve', [UserChoreController::class, 'approveWork']);
+        Route::delete("/user-chore/{id}/remove", [UserChoreController::class, 'removeChoreFromUser']);
+
+        Route::get('/permission/{id}', [PermissionsController::class, 'getPermission']);
+        Route::get('/permissions', [PermissionsController::class, 'getPermissions']);
+        Route::post('/permission/create', [PermissionsController::class, 'createPermission']);
+        Route::put('/permission/update', [PermissionsController::class, 'updatePermission']);
+
+        Route::post('/user/permission/add', [UserPermissionController::class, 'addPermission']);
+        Route::put('/user/permission/update', [UserPermissionController::class, 'updatePermission']);
+
+        Route::get('/transaction/{id}', [TransactionController::class, 'getTransaction']);
+        Route::get('/transactions', [TransactionController::class, 'getTransactionsList']);
+        Route::post('/transaction/spend', [TransactionController::class, 'spendTransaction']);
+        Route::put('/transaction/approval', [TransactionController::class, 'approveTransaction']);
+        Route::put('/transaction/reject', [TransactionController::class, 'rejectTransaction']);
     });
 });

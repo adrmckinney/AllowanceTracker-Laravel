@@ -8,9 +8,17 @@ class UserType extends BaseType
 {
     protected $fillable = [
         'name',
+        'username',
         'email',
-        'phone',
         'password',
+        'api_token',
         'permissions',
     ];
+
+    public function toCreateArray(): array
+    {
+        return $this->toArray(['exclude' => [
+            'id'
+        ]]);
+    }
 }

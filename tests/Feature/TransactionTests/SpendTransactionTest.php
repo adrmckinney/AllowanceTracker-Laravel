@@ -3,11 +3,8 @@
 namespace Tests\Feature\UserTests;
 
 use App\Data\Enums\TransactionApprovalStatuses;
-use App\Data\Enums\TransactionApprovalType;
 use App\Data\Enums\TransactionApprovalTypes;
 use App\Data\Enums\TransactionTypes;
-use App\Models\Chore;
-use App\Models\Transaction;
 use App\Models\User;
 use Tests\APITestCase;
 
@@ -175,11 +172,6 @@ class SpendTransactionTest extends APITestCase
         $this->initChildUser();
         $this->cannotApproveRejectedTransferRequest();
     }
-
-
-    // reject approval
-    // cannot approve a rejected invoice
-
 
     private function canSpendMoney($target = null)
     {
@@ -520,7 +512,6 @@ class SpendTransactionTest extends APITestCase
         ];
 
         $response = $this->urlConfig('put', 'transaction/approval', $input);
-        $this->echoResponse($response);
 
         $response->assertStatus(200)
             ->assertJsonPath('transaction.approval_status', TransactionApprovalStatuses::$REJECTED)

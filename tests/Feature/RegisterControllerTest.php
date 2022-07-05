@@ -15,14 +15,19 @@ class RegisterControllerTest extends APITestCase
         $email = $this->faker->safeEmail();
         $password = $this->faker->password(8);
 
-        $response = $this->post('/api/register', [
-            'name' => $name,
-            'email' => $email,
-            'username' => $username,
-            'api_token' => 'zOTsFDQa5YtRiMQi5Guf1m3p7hacGMqxiWi7Hj2ifY7Z73J8ot5CQKTux4EQ',
-            'password' => $password,
-            'password_confirmation' => $password,
-        ]);
+        $response = $this->urlConfig(
+            'post',
+            'register',
+            [
+                'name' => $name,
+                'email' => $email,
+                'username' => $username,
+                'api_token' => 'zOTsFDQa5YtRiMQi5Guf1m3p7hacGMqxiWi7Hj2ifY7Z73J8ot5CQKTux4EQ',
+                'password' => $password,
+                'password_confirmation' => $password,
+            ],
+            true
+        );
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('users', [
@@ -32,7 +37,5 @@ class RegisterControllerTest extends APITestCase
         ]);
         $user = User::where('email', $email)->where('name', $name)->first();
         $this->assertNotNull($user);
-
-        $this->assertAuthenticatedAs($user);
     }
 }

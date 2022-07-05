@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\LoginRequest;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -41,17 +39,15 @@ class LoginController extends Controller
     {
         $credentials = $request->getCredentials();
 
-        if (!Auth::validate($credentials)) {
-            // return redirect()->to('login')
-            //     ->withErrors(trans('auth.failed'));
+        if (Auth::guard('web')->validate($credentials)) {
+            $user = Auth::getProvider()->retrieveByCredentials($credentials);
+
+            Auth::guard('web')->login($user);
+
+            return [$this->authenticated($request, $user)->getStatusCode(), $user];
+        } else {
             return ['error' => 'Username or Password is incorrect'];
         }
-
-        $user = Auth::getProvider()->retrieveByCredentials($credentials);
-
-        Auth::login($user);
-
-        return [$this->authenticated($request, $user)->getStatusCode(), $user];
     }
 
     /**
@@ -64,7 +60,6 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-        // return redirect()->intended();
-        return new JsonResponse(['message' => 'something']);
+        return new JsonResponse(['message' => 'You have been logged in']);
     }
 }

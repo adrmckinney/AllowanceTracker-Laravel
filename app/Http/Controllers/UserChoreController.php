@@ -64,7 +64,7 @@ class UserChoreController extends Controller
             abort(403, 'You do not have access to be added to this chore');
         }
 
-        $createUserChore = new UserChoreType([
+        $userChoreData = new UserChoreType([
             'user_id' => $userId,
             'chore_id' => $choreId,
             'approval_requested' => false,
@@ -73,7 +73,7 @@ class UserChoreController extends Controller
             'approval_date' => NULL,
         ]);
 
-        return UserChore::create($createUserChore->toCreateArray());
+        return $this->createUserChore($userChoreData);
     }
 
     public function removeChoreFromUser(Request $request, $id)
@@ -94,8 +94,6 @@ class UserChoreController extends Controller
         }
         $userChore = $this->getUserChoreById($request->id);
         $userChore = $this->handleApprovalRequest($userChore, $request);
-
-        $userChore->save();
 
         return $userChore;
     }
@@ -125,11 +123,6 @@ class UserChoreController extends Controller
         return UserChore::where('chore_id', '=', $chore_id)->get();
     }
 
-    // public function getChoresOfUser($user_id)
-    // {
-    //     return UserChore::where('user_id', '=', $user_id)->get();
-    // }
-
     public function isRequestingApproval($request, $field)
     {
         return ($field === 'approval_requested' && $request->$field === true);
@@ -137,9 +130,12 @@ class UserChoreController extends Controller
 
     public function handleApprovalRequest($userChore, $request)
     {
-        $userChore['approval_requested'] = $request->approval_requested;
-        $userChore['approval_request_date'] = date('Y-m-d H:i:s', time());
-        $userChore['approval_status'] = UserChoreApprovalStatuses::$PENDING;
+        $userChoreData = new UserChoreType([
+            $userChore['approval_requested'] = $request->approval_requested,
+            $userChore['approval_request_date'] = date('Y-m-d H:i:s', time()),
+            $userChore['approval_status'] = UserChoreApprovalStatuses::$PENDING,
+        ]);
+        $userChore = $this->updateUserChore($userChore, $userChoreData);
 
         return $userChore;
     }
@@ -151,9 +147,13 @@ class UserChoreController extends Controller
 
         switch ($request->approval_status) {
             case UserChoreApprovalStatuses::$APPROVED:
-                $userChore['approval_status'] = UserChoreApprovalStatuses::$APPROVED;
-                $userChore['approval_date'] = date('Y-m-d H:i:s', time());
-                $userChore['rejected_date'] = NULL;
+                $userChoreData = new UserChoreType([
+                    $userChore['approval_status'] = UserChoreApprovalStatuses::$APPROVED,
+                    $userChore['approval_date'] = date('Y-m-d H:i:s', time()),
+                    $userChore['rejected_date'] = NULL,
+                ]);
+
+                $this->updateUserChore($userChore, $userChoreData);
 
                 $transaction = new TransactionType([
                     'user_id' => $userChore->user_id,
@@ -162,13 +162,17 @@ class UserChoreController extends Controller
                     'transaction_type' => TransactionTypes::$DEPOSIT
                 ]);
                 $this->transactionController->createTransaction($transaction);
-
+                $this->transactionController->updateWallet($transaction);
                 return $userChore;
 
             case UserChoreApprovalStatuses::$REJECTED:
-                $userChore['approval_status'] = UserChoreApprovalStatuses::$REJECTED;
-                $userChore['approval_date'] = NULL;
-                $userChore['rejected_date'] = date('Y-m-d H:i:s', time());
+                $userChoreData = new UserChoreType([
+                    $userChore['approval_status'] = UserChoreApprovalStatuses::$REJECTED,
+                    $userChore['approval_date'] = NULL,
+                    $userChore['rejected_date'] = date('Y-m-d H:i:s', time()),
+                ]);
+
+                $this->updateUserChore($userChore, $userChoreData);
 
                 if ($userChoreCurrentStatus === UserChoreApprovalStatuses::$APPROVED) {
                     $transaction = new TransactionType([
@@ -178,14 +182,18 @@ class UserChoreController extends Controller
                         'transaction_type' => TransactionTypes::$WITHDRAW
                     ]);
                     $this->transactionController->createTransaction($transaction);
+                    $this->transactionController->updateWallet($transaction);
                 }
 
                 return $userChore;
 
             case UserChoreApprovalStatuses::$PENDING:
-                $userChore['approval_status'] = UserChoreApprovalStatuses::$PENDING;
-                $userChore['approval_date'] = NULL;
-                $userChore['rejected_date'] = NULL;
+                $userChoreData = new UserChoreType([
+                    $userChore['approval_status'] = UserChoreApprovalStatuses::$PENDING,
+                    $userChore['approval_date'] = NULL,
+                    $userChore['rejected_date'] = NULL,
+                ]);
+                $this->updateUserChore($userChore, $userChoreData);
 
                 if ($userChoreCurrentStatus === UserChoreApprovalStatuses::$APPROVED) {
                     $transaction = new TransactionType([
@@ -195,6 +203,7 @@ class UserChoreController extends Controller
                         'transaction_type' => TransactionTypes::$WITHDRAW
                     ]);
                     $this->transactionController->createTransaction($transaction);
+                    $this->transactionController->updateWallet($transaction);
                 }
 
                 return $userChore;
@@ -202,6 +211,19 @@ class UserChoreController extends Controller
             default:
                 return $userChore;
         }
+
+        return $userChore;
+    }
+
+    public function createUserChore(UserChoreType $userChoreData)
+    {
+        return UserChore::create($userChoreData->toCreateArray());
+    }
+
+    public function updateUserChore(UserChore $userChore, UserChoreType $userChoreData)
+    {
+        $userChore->fill($userChoreData->toUpdateArray());
+        $userChore->save();
 
         return $userChore;
     }

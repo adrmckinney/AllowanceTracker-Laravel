@@ -2,21 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Data\Traits\UserTrait;
 use Illuminate\Http\Request;
-use App\Http\Requests\RegisterRequest;
+use App\Types\Users\UserType;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class RegisterController extends Controller
 {
-
-    public function show()
-    {
-        // return view('auth.register');
-        return 'hello';
-    }
-
+    use UserTrait;
     /**
      * Handle account registration request
      * 
@@ -24,8 +18,7 @@ class RegisterController extends Controller
      */
     public function register(Request $request)
     {
-        // $user = User::create($request->input());
-        $user = User::create([
+        $userData = new UserType([
             'name' => $request['name'],
             'username' => $request['username'],
             'email' => $request['email'],
@@ -33,45 +26,13 @@ class RegisterController extends Controller
             'api_token' => Str::random(60),
         ]);
 
+        $user = $this->createUser($userData);
 
-        auth()->login($user);
+        auth()->guard('web')->login($user);
 
-        // return redirect('/')->with('success', "Account successfully registered.");
         return response()->json([
-            'messsage' => 'user successfully created!',
+            'messsage' => 'User successfully created!',
             $user
         ], 201);
     }
-
-
-    // public function __invoke()
-    // {
-    // $user = User::create($request->validated());
-
-    // auth()->login($user);
-
-    // // return redirect('/')->with('success', "Account successfully registered.");
-    // return response()->json([
-    //     'messsage' => 'user successfully created!'
-    // ], 201);
-    // }
-
-    // /**
-    //  * Handle account registration request
-    //  * 
-    //  * @param RegisterRequest $request
-    //  * 
-    //  * @return \Illuminate\Http\Response
-    //  */
-    // public function register(RegisterRequest $request)
-    // {
-    //     $user = User::create($request->validated());
-
-    //     auth()->login($user);
-
-    //     // return redirect('/')->with('success', "Account successfully registered.");
-    //     return response()->json([
-    //         'messsage' => 'user successfully created!'
-    //     ], 201);
-    // }
 }

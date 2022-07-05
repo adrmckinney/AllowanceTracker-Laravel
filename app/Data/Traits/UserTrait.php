@@ -2,13 +2,16 @@
 
 namespace App\Data\Traits;
 
-use App\Http\Controllers\UserController;
-use App\Models\Permission;
-use App\Models\UsersPermissions;
-use Exception;
+use App\Models\User;
+use App\Types\Users\UserType;
 
 trait UserTrait
 {
+    public function createUser(UserType $userData)
+    {
+        return User::create($userData->toCreateArray());
+    }
+
     public function addMoneyToWallet($user, $amount)
     {
         $user['wallet'] = $user['wallet'] + $amount;

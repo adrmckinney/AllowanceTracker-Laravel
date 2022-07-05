@@ -110,12 +110,25 @@ trait WithUserHelpers
         ];
     }
 
-    public function urlConfig($callType, $uri, $input = null)
+    public function withNoAuthHeaders()
+    {
+        return [
+            'Accept' => 'application/json'
+        ];
+    }
+
+    public function urlConfig($callType, $uri, $input = null, $noAuthorization = false)
     {
         if (is_null($input)) {
             return $this->withHeaders($this->getHeaders())
                 ->$callType(
                     "api/{$uri}",
+                );
+        } elseif ($noAuthorization) {
+            return $this->withHeaders($this->withNoAuthHeaders())
+                ->$callType(
+                    "api/{$uri}",
+                    $input,
                 );
         } else {
             return $this->withHeaders($this->getHeaders())

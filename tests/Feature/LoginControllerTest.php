@@ -11,7 +11,16 @@ class LoginControllerTest extends APITestCase
     public function user_can_login_successfully()
     {
         $user = User::factory()->create();
-        $response = $this->post('/api/login', ['username' => $user->username, 'password' => 'password']);
+
+        $response = $this->urlConfig(
+            'post',
+            'login',
+            [
+                'username' => $user->username,
+                'password' => 'password'
+            ],
+            true
+        );
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('users', [
@@ -20,14 +29,21 @@ class LoginControllerTest extends APITestCase
             'username' => $user->username,
             'api_token' => $user->api_token,
         ]);
-        $this->assertAuthenticatedAs($user);
     }
 
     /** @test */
     public function user_login_unsuccessful()
     {
         $user = User::factory()->create();
-        $response = $this->post('/api/login', ['username' => $user->name, 'password' => 'password']);
+        $response = $this->urlConfig(
+            'post',
+            'login',
+            [
+                'username' => $user->name,
+                'password' => 'password'
+            ],
+            true
+        );
         $error = $response['error'];
 
         $response->assertStatus(200);

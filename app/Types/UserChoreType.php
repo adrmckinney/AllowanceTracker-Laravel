@@ -7,7 +7,6 @@ use App\Types\BaseType;
 class UserChoreType extends BaseType
 {
     protected $fillable = [
-        'id',
         'user_id',
         'chore_id',
         'approval_requested',
@@ -18,14 +17,11 @@ class UserChoreType extends BaseType
 
     public function toCreateArray(): array
     {
-        return $this->toArray([
-            'id',
-            'user_id',
-            'chore_id',
-            'approval_requested',
-            'approval_request_date',
-            'approval_status',
-            'approval_date'
-        ]);
+        return $this->toArray(['exclude' => ['id']]);
+    }
+
+    public function toUpdateArray(): array
+    {
+        return $this->toArray(['exclude' => ['id']]);
     }
 }
