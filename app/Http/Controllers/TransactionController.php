@@ -27,7 +27,7 @@ class TransactionController extends Controller
     public function updateWallet($transaction)
     {
         if ($transaction->approval_status === TransactionApprovalStatuses::$PENDING) {
-            return new Exception('waiting for approval before updating wallet');
+            return new Exception('Waiting for approval before updating wallet');
         }
 
         $user = $this->findUser($transaction->user_id);
@@ -169,8 +169,6 @@ class TransactionController extends Controller
 
     public function createTransaction(TransactionType $transactionData)
     {
-        // $newTransaction = new TransactionType($transactionData);
-
         return Transaction::create($transactionData->toCreateArray());
     }
 

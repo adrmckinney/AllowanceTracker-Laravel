@@ -5,8 +5,6 @@ namespace Database\Seeders;
 use App\Http\Controllers\PermissionsController;
 use App\Models\Permission;
 use Illuminate\Database\Seeder;
-use DateTime;
-use Illuminate\Support\Facades\DB;
 
 class PermissionsSeeder extends Seeder
 {

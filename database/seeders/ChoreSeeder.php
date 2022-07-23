@@ -60,7 +60,7 @@ class ChoreSeeder extends Seeder
         $this->command->getOutput()->progressStart(count($this->chores));
 
         foreach ($this->chores as $chore) {
-            // $updateChore = $this->choreController->getChoreById($chore['has to be something else'])
+            // $updateChore = $this->choreController->getChoreById($chore['has to be something else']);
 
             if (!$this->choreController->choreExists($chore['name'])) {
                 Chore::factory()->create([

@@ -20,6 +20,34 @@ class UserSeeder extends Seeder
             'wallet' => 0,
             'password' => 'password',
         ],
+        [
+            'name' => 'Christy McKinney',
+            'email' => 'cd_mck@yahoo.com',
+            'username' => 'cd_mck',
+            'wallet' => 0,
+            'password' => 'password',
+        ],
+        [
+            'name' => 'Abbey McKinney',
+            'email' => 'abbey@email.com',
+            'username' => 'abbey_mck',
+            'wallet' => 50000,
+            'password' => 'password',
+        ],
+        [
+            'name' => 'Olivia McKinney',
+            'email' => 'olivia@email.com',
+            'username' => 'olivia_mck',
+            'wallet' => 40000,
+            'password' => 'password',
+        ],
+        [
+            'name' => 'Matthew McKinney',
+            'email' => 'matthew@email.com',
+            'username' => 'matthew_mck',
+            'wallet' => 35000,
+            'password' => 'password',
+        ],
     ];
 
     protected $userController;

@@ -82,8 +82,14 @@ class UserPermissionController extends Controller
         return UsersPermissions::where('user_id', '=', $user_id)->first();
     }
 
-    public function userPermissionExists($name)
+    public function userPermissionExists($userId)
     {
-        return UsersPermissions::where('name', '=', $name)->first();
+        $userPermission = UsersPermissions::where('user_id', '=', $userId)->first();
+
+        if (!!$userPermission) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

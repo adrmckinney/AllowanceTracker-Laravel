@@ -7,10 +7,10 @@ use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserPermissionController;
 use App\Models\Permission;
+use App\Models\User;
 use App\Models\UsersPermissions;
 use DateTime;
 use Illuminate\Database\Seeder;
-use Illuminate\Http\Request;
 
 class UsersPermissionsSeeder extends Seeder
 {
@@ -37,20 +37,39 @@ class UsersPermissionsSeeder extends Seeder
         $startTime = new DateTime();
         $this->command->info('Seeding UserPermissions');
 
-        $users = $this->userController->getUsers();
+        $users = User::all();
         $permissions = Permission::all();
 
         $this->command->getOutput()->progressStart(count($users) * count($permissions));
 
         foreach ($users as $user) {
-            if ($this->userController->getUserByUsername($user->username)->first()->username === "adrmckinney") {
-                UsersPermissions::factory()->create([
-                    'user_id' => $user->id,
-                    'permission_id' => PermissionTypes::$ADMIN
-                ]);
-
-                $this->command->getOutput()->progressAdvance();
+            if (!$this->usersPermissionsController->userPermissionExists($user->id)) {
+                switch ($user->username) {
+                    case 'adrmckinney':
+                        UsersPermissions::create([
+                            'user_id' => $user->id,
+                            'permission_id' => PermissionTypes::$ADMIN
+                        ]);
+                        break;
+                    case 'cd_mck':
+                        UsersPermissions::create([
+                            'user_id' => $user->id,
+                            'permission_id' => PermissionTypes::$PARENT
+                        ]);
+                        break;
+                    case 'abbey_mck':
+                    case 'olivia_mck':
+                    case 'matthew_mck':
+                        UsersPermissions::create([
+                            'user_id' => $user->id,
+                            'permission_id' => PermissionTypes::$CHILD
+                        ]);
+                        break;
+                    default:
+                        break;
+                }
             }
+            $this->command->getOutput()->progressAdvance();
         }
         $this->command->info(PHP_EOL);
         $executionTime = $startTime->diff(new DateTime());

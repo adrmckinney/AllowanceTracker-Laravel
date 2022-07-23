@@ -2,43 +2,45 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 use Tests\APITestCase;
-use Illuminate\Support\Str;
-
-// examples from https://medium.com/@brice_hartmann/testing-laravel-password-resets-858c58c16b79
 
 class PasswordResetTest extends APITestCase
 {
-    // /** @test */
-    // public function admin_user_can_reset_password()
-    // {
-    //     $this->initAdminUser();
-    //     $this->canResetPassword();
-    // }
+    /** @test */
+    public function admin_user_can_reset_password()
+    {
+        $this->initAdminUser();
+        $this->canResetPassword();
+    }
 
-    // /** @test */
-    // public function parent_user_can_reset_password()
-    // {
-    //     $this->initParentUser();
-    //     $this->canResetPassword();
-    // }
+    /** @test */
+    public function parent_user_can_reset_password()
+    {
+        $this->initParentUser();
+        $this->canResetPassword();
+    }
 
-    // /** @test */
-    // public function child_user_can_reset_password()
-    // {
-    //     $this->initChildUser();
-    //     $this->canResetPassword();
-    // }
+    /** @test */
+    public function child_user_can_reset_password()
+    {
+        $this->initChildUser();
+        $this->canResetPassword();
+    }
 
-    // /** @test */
-    // public function parent_user_cannot_reset_password_with_invalid_email()
-    // {
-    //     $this->initParentUser();
-    //     $this->cannotResetPasswordWithInvalidEmail();
-    // }
+    /** @test */
+    public function parent_user_cannot_reset_password_with_bad_old_password()
+    {
+        $this->initParentUser();
+        $this->cannotResetPasswordWithBadOldPassword();
+    }
+
+    /** @test */
+    public function parent_user_cannot_reset_password_with_invalid_email()
+    {
+        $this->initParentUser();
+        $this->cannotResetPasswordWithInvalidEmail();
+    }
 
     /** @test */
     public function parent_user_cannot_reset_password_with_invalid_password()
@@ -47,19 +49,47 @@ class PasswordResetTest extends APITestCase
         $this->cannotResetPasswordWithInvalidPassword();
     }
 
+    /** @test */
+    public function parent_user_cannot_reset_password_with_short_password()
+    {
+        $this->initParentUser();
+        $this->cannotResetPasswordWithShortPassword();
+    }
+
     public function canResetPassword()
+    {
+        $userOldPassword = $this->authUser->password;
+        $response = $this->post('/api/password/reset', [
+            'id' => $this->authUser->id,
+            'email' => $this->authUser->email,
+            'oldPassword' => 'password',
+            'password' => 'newPassword',
+            'password_confirmation' => 'newPassword',
+            'api_token' => $this->authUser->api_token,
+        ]);
+
+        $this->authUser->refresh();
+        $pwdMatches = Hash::check($this->authUser->password, $userOldPassword);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('api_token', $this->authUser->api_token);
+        $this->assertFalse($pwdMatches);
+    }
+
+    public function cannotResetPasswordWithBadOldPassword()
     {
         $response = $this->post('/api/password/reset', [
             'id' => $this->authUser->id,
             'email' => $this->authUser->email,
-            'password' => 'aNewPassword1',
-            'password_confirmation' => 'aNewPassword1',
+            'oldPassword' => 'notOriginalPassword',
+            'password' => 'newPassword',
+            'password_confirmation' => 'newPassword',
             'api_token' => $this->authUser->api_token,
         ]);
+        $errorMessage = $response->exception->getMessage();
 
-        $response->assertStatus(200)
-            ->assertJsonPath('api_token', $this->authUser->api_token);
-        $this->assertNotEquals($this->authUser->password, $response->baseResponse->original->password);
+        $response->assertStatus(403);
+        $this->assertEquals('The old password did not match', $errorMessage);
     }
 
     public function cannotResetPasswordWithInvalidEmail()
@@ -67,6 +97,7 @@ class PasswordResetTest extends APITestCase
         $response = $this->post('/api/password/reset', [
             'id' => $this->authUser->id,
             'email' => $this->faker->safeEmail(),
+            'oldPassword' => 'password',
             'password' => 'aNewPassword1',
             'password_confirmation' => 'aNewPassword1',
             'api_token' => $this->authUser->api_token,
@@ -83,6 +114,7 @@ class PasswordResetTest extends APITestCase
         $response = $this->post('/api/password/reset', [
             'id' => $this->authUser->id,
             'email' => $this->authUser->email,
+            'oldPassword' => 'password',
             'password' => 'anew',
             'password_confirmation' => 'ane',
             'api_token' => $this->authUser->api_token,
@@ -90,235 +122,25 @@ class PasswordResetTest extends APITestCase
 
         $errorMessage = $response->exception->getMessage();
 
-        $response->assertStatus(403);
-        $this->assertEquals('The email you provided is not correct', $errorMessage);
+        $response->assertStatus(422);
+        $this->assertEquals('You new password does not match your confirmed password', $errorMessage);
     }
 
-    // /** @test */
-    // public function testSubmitPasswordResetRequestInvalidEmail()
-    // {
-    //     $this
-    //         ->followingRedirects()
-    //         ->from(route(self::ROUTE_PASSWORD_REQUEST))
-    //         ->post(route(self::ROUTE_PASSWORD_EMAIL), [
-    //             'email' => Str::random(8),
-    //         ])
-    //         ->assertSuccessful()
-    //         ->assertSee(__('validation.email', [
-    //             'attribute' => 'email',
-    //         ]));
-    // }
+    public function cannotResetPasswordWithShortPassword()
+    {
+        $response = $this->post('/api/password/reset', [
+            'id' => $this->authUser->id,
+            'email' => $this->authUser->email,
+            'oldPassword' => 'password',
+            'password' => 'short',
+            'password_confirmation' => 'short',
+            'api_token' => $this->authUser->api_token,
+        ]);
 
-    // /** @test */
-    // public function testSubmitPasswordResetRequestEmailNotFound()
-    // {
-    //     $this
-    //         ->followingRedirects()
-    //         ->from(route(self::ROUTE_PASSWORD_REQUEST))
-    //         ->post(route(self::ROUTE_PASSWORD_EMAIL), [
-    //             'email' => $this->faker->unique()->safeEmail,
-    //         ])
-    //         ->assertSuccessful()
-    //         ->assertSee(e(__('passwords.user')));
-    // }
+        $decodedResponse = $response->decodeResponseJson();
+        $errorMessage = $decodedResponse['message']['password'][0];
 
-    // /** @test */
-    // public function testSubmitPasswordResetRequest()
-    // {
-    //     $user = User::factory()->create();
-
-    //     $this
-    //         ->followingRedirects()
-    //         ->from(route(self::ROUTE_PASSWORD_REQUEST))
-    //         ->post(route(self::ROUTE_PASSWORD_EMAIL), [
-    //             'email' => $user->email,
-    //         ])
-    //         ->assertSuccessful()
-    //         ->assertSee(__('passwords.sent'));
-
-    //     $this->Notification::assertSentTo($user, ResetPassword::class);
-    // }
-
-    // /** @test */
-    // public function testSubmitPasswordResetInvalidEmail()
-    // {
-    //     $user = User::factory()->create([
-    //         'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
-    //     ]);
-
-    //     $token = Password::broker()->createToken($user);
-
-    //     $password = Str::random();
-
-    //     $this
-    //         ->followingRedirects()
-    //         ->from(route(self::ROUTE_PASSWORD_RESET, [
-    //             'token' => $token,
-    //         ]))
-    //         ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
-    //             'token' => $token,
-    //             'email' => Str::random(),
-    //             'password' => $password,
-    //             'password_confirmation' => $password,
-    //         ])
-    //         ->assertSuccessful()
-    //         ->assertSee(__('validation.email', [
-    //             'attribute' => 'email',
-    //         ]));
-
-    //     $user->refresh();
-
-    //     $this->assertFalse(Hash::check($password, $user->password));
-
-    //     $this->assertTrue(Hash::check(
-    //         self::USER_ORIGINAL_PASSWORD,
-    //         $user->password
-    //     ));
-    // }
-
-    // /** @test */
-    // public function testSubmitPasswordResetEmailNotFound()
-    // {
-    //     $user = User::factory()->create([
-    //         'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
-    //     ]);
-
-    //     $token = Password::broker()->createToken($user);
-
-    //     $password = Str::random();
-
-    //     $this
-    //         ->followingRedirects()
-    //         ->from(route(self::ROUTE_PASSWORD_RESET, [
-    //             'token' => $token,
-    //         ]))
-    //         ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
-    //             'token' => $token,
-    //             'email' => $this->faker->unique()->safeEmail,
-    //             'password' => $password,
-    //             'password_confirmation' => $password,
-    //         ])
-    //         ->assertSuccessful()
-    //         ->assertSee(e(__('passwords.user')));
-
-    //     $user->refresh();
-
-    //     $this->assertFalse(Hash::check($password, $user->password));
-
-    //     $this->assertTrue(Hash::check(
-    //         self::USER_ORIGINAL_PASSWORD,
-    //         $user->password
-    //     ));
-    // }
-
-    // /** @test */
-    // public function testSubmitPasswordResetPasswordMismatch()
-    // {
-    //     $user = User::factory()->create([
-    //         'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
-    //     ]);
-
-    //     $token = Password::broker()->createToken($user);
-
-    //     $password = Str::random();
-    //     $password_confirmation = Str::random();
-
-    //     $this
-    //         ->followingRedirects()
-    //         ->from(route(self::ROUTE_PASSWORD_RESET, [
-    //             'token' => $token,
-    //         ]))
-    //         ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
-    //             'token' => $token,
-    //             'email' => $user->email,
-    //             'password' => $password,
-    //             'password_confirmation' => $password_confirmation,
-    //         ])
-    //         ->assertSuccessful()
-    //         ->assertSee(__('validation.confirmed', [
-    //             'attribute' => 'password',
-    //         ]));
-
-    //     $user->refresh();
-
-    //     $this->assertFalse(Hash::check($password, $user->password));
-
-    //     $this->assertTrue(Hash::check(
-    //         self::USER_ORIGINAL_PASSWORD,
-    //         $user->password
-    //     ));
-    // }
-
-    // /** @test */
-    // public function testSubmitPasswordResetPasswordTooShort()
-    // {
-    //     $user = User::factory()->create([
-    //         'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
-    //     ]);
-
-    //     $token = Password::broker()->createToken($user);
-
-    //     $password = Str::random(5);
-
-    //     $this
-    //         ->followingRedirects()
-    //         ->from(route(self::ROUTE_PASSWORD_RESET, [
-    //             'token' => $token,
-    //         ]))
-    //         ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
-    //             'token' => $token,
-    //             'email' => $user->email,
-    //             'password' => $password,
-    //             'password_confirmation' => $password,
-    //         ])
-    //         ->assertSuccessful()
-    //         ->assertSee(__('validation.min.string', [
-    //             'attribute' => 'password',
-    //             'min' => 6,
-    //         ]));
-
-    //     $user->refresh();
-
-    //     $this->assertFalse(Hash::check($password, $user->password));
-
-    //     $this->assertTrue(Hash::check(
-    //         self::USER_ORIGINAL_PASSWORD,
-    //         $user->password
-    //     ));
-    // }
-
-    // /** @test */
-    // public function testSubmitPasswordReset()
-    // {
-    //     $user = User::factory()->create([
-    //         'password' => bcrypt(self::USER_ORIGINAL_PASSWORD),
-    //     ]);
-
-    //     $token = Password::broker()->createToken($user);
-
-    //     $password = Str::random();
-
-    //     $this
-    //         ->followingRedirects()
-    //         ->from(route(self::ROUTE_PASSWORD_RESET, [
-    //             'token' => $token,
-    //         ]))
-    //         ->post(route(self::ROUTE_PASSWORD_RESET_SUBMIT), [
-    //             'token' => $token,
-    //             'email' => $user->email,
-    //             'password' => $password,
-    //             'password_confirmation' => $password,
-    //         ])
-    //         ->assertSuccessful()
-    //         ->assertSee(__('passwords.reset'));
-
-    //     $user->refresh();
-
-    //     $this->assertFalse(Hash::check(
-    //         self::USER_ORIGINAL_PASSWORD,
-    //         $user->password
-    //     ));
-
-    //     $this->assertTrue(Hash::check($password, $user->password));
-    // }
+        $response->assertStatus(422);
+        $this->assertEquals('The password must be at least 8 characters.', $errorMessage);
+    }
 }
